@@ -256,3 +256,6 @@ checkpoints/
 # test directories
 
 #samples/
+.claude/
+samples/
+context/
