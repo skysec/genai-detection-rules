@@ -1,0 +1,82 @@
+rules:
+  - id: detect-memory-langchain-typescript
+    languages:
+      - typescript
+      - javascript
+    severity: INFO
+    message: "Detected LangChain memory usage: Conversation memory, chat history, or context retention patterns"
+    pattern-either:
+      # Memory imports
+      - pattern: import { BufferMemory } from "langchain/memory"
+      - pattern: import { ConversationSummaryMemory } from "langchain/memory"
+      - pattern: import { ConversationSummaryBufferMemory } from "langchain/memory"
+      - pattern: import { $MEMORY } from "langchain/memory"
+      - pattern: import { ConversationChain } from "langchain/chains"
+      # Memory instantiation
+      - pattern: |
+          const $MEMORY = new BufferMemory({
+              ...
+          })
+      - pattern: "new BufferMemory({ ... })"
+      - pattern: |
+          const $MEMORY = new ConversationSummaryMemory({
+              llm: $LLM,
+              ...
+          })
+      # Conversation chain with memory
+      - pattern: |
+          const $CHAIN = new ConversationChain({
+              llm: $LLM,
+              memory: $MEMORY,
+              ...
+          })
+      - pattern: |
+          new ConversationChain({
+              ...
+              memory: $MEMORY,
+              ...
+          })
+      # Memory usage patterns
+      - pattern: '$CHAIN.call({ input: $INPUT })'
+      - pattern: '$CHAIN.predict({ input: $INPUT })'
+      - pattern: await $CHAIN.call(...)
+      - pattern: "memory: $MEMORY_VAR"
+      # Memory method calls
+      - pattern: $MEMORY.saveContext($INPUTS, $OUTPUTS)
+      - pattern: "$MEMORY.loadMemoryVariables({})"
+      - pattern: $MEMORY.clear()
+      - pattern: await $MEMORY.saveContext(...)
+      - pattern: await $MEMORY.loadMemoryVariables(...)
+      # Chat message history
+      - pattern: import { ChatMessageHistory } from "langchain/memory"
+      - pattern: import { $HISTORY } from "langchain/stores/message"
+      - pattern: |
+          const messageHistory = new ChatMessageHistory($MESSAGES)
+      - pattern: "chatHistory: $HISTORY"
+      - pattern: "messageHistory: $HISTORY"
+      # Memory configuration options
+      - pattern: "returnMessages: true"
+      - pattern: "memoryKey: $KEY"
+      - pattern: "inputKey: $KEY"
+      - pattern: "outputKey: $KEY"
+      - pattern: "humanPrefix: $PREFIX"
+      - pattern: "aiPrefix: $PREFIX"
+      # External storage for memory
+      - pattern: import { RedisChatMessageHistory } from "@langchain/redis"
+      - pattern: import { $STORAGE } from "@langchain/community/stores"
+    metadata:
+      references:
+        - https://js.langchain.com/docs/modules/memory/
+        - https://js.langchain.com/docs/modules/memory/types/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - memory
+        - conversation
+        - chat-history
+        - typescript
+        - javascript
+      confidence: MEDIUM
+      subcategory:
+        - memory

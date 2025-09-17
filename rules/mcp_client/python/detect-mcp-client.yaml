@@ -1,0 +1,61 @@
+rules:
+  - id: detect-mcp-client-python
+    languages:
+      - python
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) client implementation: Official MCP Python SDK usage for client connections, tool invocation, or resource access"
+    pattern-either:
+      # Official MCP SDK imports - highest confidence
+      - pattern: from mcp import ClientSession
+      - pattern: from mcp.client.stdio import stdio_client
+      - pattern: from mcp.client.stdio import StdioServerParameters
+      - pattern: from mcp.client.session import ClientSession
+      - pattern: from mcp.client.streamable_http import streamablehttp_client
+      - pattern: from mcp.client.auth import OAuthClientProvider
+
+      # MCP-specific parameter classes
+      - pattern: StdioServerParameters(...)
+      - pattern: $PARAMS = StdioServerParameters(...)
+
+      # Official stdio_client usage patterns - very specific to MCP
+      - pattern: |
+          async with stdio_client($PARAMS) as ($READ, $WRITE):
+              ...
+      - pattern: stdio_client($SERVER_PARAMS)
+      - pattern: await stdio_client(...)
+
+      # ClientSession patterns - core MCP client usage
+      - pattern: |
+          async with ClientSession($READ, $WRITE) as $SESSION:
+              ...
+      - pattern: ClientSession($READ, $WRITE)
+      - pattern: await $SESSION.initialize()
+
+      # MCP-specific tool operations - official SDK methods
+      - pattern: await $SESSION.list_tools()
+      - pattern: $TOOLS = await $SESSION.list_tools()
+      - pattern: await $SESSION.call_tool($NAME, ...)
+      - pattern: $RESULT = await $SESSION.call_tool(...)
+
+      # MCP types usage - official SDK types
+      - pattern: from mcp.types import $MCP_TYPE
+      - pattern: from mcp import types
+
+      # OAuth patterns specific to MCP
+      - pattern: from mcp.shared.auth import $AUTH_TYPE
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/
+        - https://github.com/modelcontextprotocol/python-sdk
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - MCP
+        - model-context-protocol
+        - client
+        - tools
+        - resources
+      confidence: MEDIUM
+      subcategory:
+        - mcp-client

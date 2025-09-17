@@ -1,0 +1,91 @@
+rules:
+  - id: detect-memory-crewai
+    languages:
+      - python
+    severity: INFO
+    message: "Detected CrewAI memory usage: Crew memory, task history, or agent interaction tracking patterns"
+    pattern-either:
+      # Custom memory class definitions
+      - pattern: |
+          class CrewMemory:
+              def __init__(self):
+                  self.task_history = []
+                  self.agent_interactions = []
+              ...
+      - pattern: |
+          class $CLASS:
+              def __init__(self):
+                  self.task_history = []
+                  ...
+      # Memory method patterns
+      - pattern: |
+          def log_task_completion(self, $ARGS):
+              ...
+      - pattern: |
+          def log_agent_interaction(self, $ARGS):
+              ...
+      - pattern: |
+          def get_context(self) -> str:
+              ...
+      # Memory storage patterns
+      - pattern: self.task_history.append($ITEM)
+      - pattern: self.agent_interactions.append($ITEM)
+      - pattern: '{"task": $TASK, "result": $RESULT, "timestamp": datetime.now()}'
+      - pattern: '{"agent": $AGENT, "action": $ACTION, "result": $RESULT, "timestamp": datetime.now()}'
+      # Memory-aware agent
+      - pattern: |
+          class MemoryAwareAgent(Agent):
+              def __init__(self, memory, **kwargs):
+                  ...
+                  self.memory = memory
+              ...
+      # Memory usage in task execution
+      - pattern: |
+          def execute_task(self, task):
+              context = self.memory.get_context()
+              ...
+      # Memory context integration
+      - pattern: enhanced_description = f"{task.description}\n\nContext from previous work:\n{context}"
+      - pattern: context = self.memory.get_context()
+      # Memory logging
+      - pattern: self.memory.log_task_completion($TASK, str($RESULT))
+      - pattern: self.memory.log_agent_interaction($AGENT, $ACTION, $RESULT)
+      # Crew with memory
+      - pattern: |
+          crew_with_memory = Crew(
+              agents=[
+                  MemoryAwareAgent(memory=$MEMORY, ...),
+                  ...
+              ],
+              ...
+          )
+      # Callback patterns for memory
+      - pattern: |
+          class CrewCallback:
+              def on_task_start(self, task, agent):
+                  ...
+              def on_task_complete(self, task, agent, result):
+                  ...
+      - pattern: callbacks=[$CALLBACK]
+      # Memory initialization
+      - pattern: crew_memory = CrewMemory()
+      - pattern: $MEMORY = $CLASS()
+      # Context retrieval patterns
+      - pattern: self.task_history[-$N:]
+      - pattern: "Previous tasks:\n"
+      - pattern: "f\"- {task['task']}: {task['result'][:100]}...\\n\""
+    metadata:
+      references:
+        - https://docs.crewai.com/how-to/Memory/
+        - https://docs.crewai.com/core-concepts/Memory/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - memory
+        - crewai
+        - multi-agent
+        - task-history
+      confidence: MEDIUM
+      subcategory:
+        - memory

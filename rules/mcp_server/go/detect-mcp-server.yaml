@@ -1,0 +1,160 @@
+rules:
+  - id: detect-mcp-server-go
+    languages:
+      - go
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) server implementation: Import patterns, function usage, or server initialization"
+    pattern-either:
+      # Core MCP server imports - HIGH CONFIDENCE
+      - pattern: import "github.com/modelcontextprotocol/go-sdk/mcp"
+      - pattern: import "github.com/mark3labs/mcp-go/mcp"
+      - pattern: import "github.com/mark3labs/mcp-go/server"
+      - pattern: import "github.com/MegaGrindStone/go-mcp/mcp"
+      - pattern: |
+          import (
+            ...
+            "github.com/modelcontextprotocol/go-sdk/mcp"
+            ...
+          )
+      - pattern: |
+          import (
+            ...
+            "github.com/mark3labs/mcp-go/mcp"
+            ...
+          )
+      - pattern: |
+          import (
+            ...
+            "github.com/mark3labs/mcp-go/server"
+            ...
+          )
+      - pattern: |
+          import (
+            ...
+            "github.com/MegaGrindStone/go-mcp/mcp"
+            ...
+          )
+
+      # MCP server creation patterns - HIGH CONFIDENCE
+      - pattern: |
+          mcp.NewServer(&mcp.Implementation{
+            ...
+          }, ...)
+      - pattern: |
+          $SERVER := mcp.NewServer(&mcp.Implementation{
+            ...
+          }, ...)
+      - pattern: |
+          server.NewMCPServer($NAME, $VERSION, ...)
+      - pattern: |
+          $SERVER := server.NewMCPServer($NAME, $VERSION, ...)
+      - pattern: mcp.NewServer(...)
+      - pattern: server.NewMCPServer(...)
+
+      # MCP tool registration patterns - HIGH CONFIDENCE
+      - pattern: |
+          mcp.AddTool($SERVER, &mcp.Tool{
+            ...
+          }, ...)
+      - pattern: |
+          $TOOL := mcp.NewTool($NAME, ...)
+      - pattern: |
+          $SERVER.AddTool($TOOL, ...)
+      - pattern: mcp.NewTool(...)
+      - pattern: mcp.AddTool(...)
+
+      # MCP tool handler function signatures - HIGH CONFIDENCE
+      - pattern: |
+          func $HANDLER(ctx context.Context, req *mcp.CallToolRequest, input $INPUT) (*mcp.CallToolResult, $OUTPUT, error) {
+            ...
+          }
+      - pattern: |
+          func $HANDLER(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+            ...
+          }
+
+      # MCP resource handler patterns - HIGH CONFIDENCE
+      - pattern: |
+          func $HANDLER(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+            ...
+          }
+
+      # MCP prompt handler patterns - HIGH CONFIDENCE
+      - pattern: |
+          func $HANDLER(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+            ...
+          }
+
+      # MCP transport patterns - HIGH CONFIDENCE
+      - pattern: |
+          $SERVER.Run(context.Background(), &mcp.StdioTransport{})
+      - pattern: |
+          server.ServeStdio($SERVER)
+      - pattern: |
+          if err := server.ServeStdio($SERVER); err != nil {
+            ...
+          }
+      - pattern: mcp.StdioTransport{}
+      - pattern: server.ServeStdio(...)
+
+      # MCP tool configuration patterns - HIGH CONFIDENCE
+      - pattern: mcp.WithDescription(...)
+      - pattern: mcp.WithString(...)
+      - pattern: mcp.Required()
+      - pattern: server.WithToolCapabilities(...)
+      - pattern: server.WithRecovery()
+
+      # MCP result creation patterns - HIGH CONFIDENCE
+      - pattern: mcp.NewToolResultText(...)
+      - pattern: mcp.ParseContent(...)
+      - pattern: mcp.NewStructuredToolHandler(...)
+
+      # MCP-specific type usage - HIGH CONFIDENCE
+      - pattern: |
+          $VAR := &mcp.Implementation{
+            ...
+          }
+      - pattern: |
+          $VAR := &mcp.Tool{
+            ...
+          }
+      - pattern: |
+          $VAR := mcp.CallToolRequest{
+            ...
+          }
+      - pattern: |
+          $VAR := mcp.CallToolResult{
+            ...
+          }
+
+      # MCP protocol constants - HIGH CONFIDENCE
+      - pattern: mcp.LATEST_PROTOCOL_VERSION
+      - pattern: mcp.ContentTypeText
+
+      # MCP client creation patterns - MEDIUM CONFIDENCE
+      - pattern: mcp.NewClient(...)
+      - pattern: |
+          $CLIENT := mcp.NewClient(...)
+
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/
+        - https://github.com/modelcontextprotocol/go-sdk
+        - https://github.com/mark3labs/mcp-go
+        - https://github.com/MegaGrindStone/go-mcp
+        - https://spec.modelcontextprotocol.io/specification/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - MCP
+        - model-context-protocol
+        - server
+        - tools
+        - resources
+        - prompts
+        - go
+        - golang
+      confidence: HIGH
+      subcategory:
+        - mcp-server

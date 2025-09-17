@@ -1,0 +1,67 @@
+rules:
+  - id: detect-tools-rasa
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Rasa tools usage: Custom actions, tools, or function calling patterns"
+    pattern-either:
+      # Rasa SDK imports
+      - pattern: from rasa_sdk import Action
+      - pattern: from rasa_sdk import Tracker
+      - pattern: from rasa_sdk.executor import CollectingDispatcher
+      - pattern: from rasa_sdk.events import SlotSet
+      # Custom action class definitions
+      - pattern: |
+          class $CLASS(Action):
+              def name(self) -> Text:
+                  return $NAME
+              ...
+      # Action run method
+      - pattern: |
+          def run(self, dispatcher: CollectingDispatcher,
+                  tracker: Tracker,
+                  domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+              ...
+      # Tool class definitions in Rasa
+      - pattern: |
+          class $CLASS(Tool):
+              def run(self, $ARGS) -> str:
+                  """$DOCSTRING"""
+                  ...
+      # Pipeline components
+      - pattern: from haystack.components.tools import Tool
+      - pattern: $PIPELINE.add_component($NAME, $TOOL)
+      # Custom NLU components
+      - pattern: from rasa.nlu.components.dense_featurizer import DenseFeaturizer
+      - pattern: from rasa.nlu.featurizers._sklearn_featurizer import SklearnFeaturizer
+      # Component registration
+      - pattern: |
+          @DefaultV1Recipe.register(...)
+          class $CLASS($PARENT):
+              ...
+      # Action method patterns
+      - pattern: dispatcher.utter_message(text=$MSG)
+      - pattern: tracker.get_slot($SLOT)
+      - pattern: SlotSet($SLOT, $VALUE)
+      # External API calls in actions
+      - pattern: requests.get($URL)
+      - pattern: requests.post($URL, ...)
+      # Tool integration patterns
+      - pattern: $TOOL.run($INPUT)
+      - pattern: weather_tool = $CLASS()
+      - pattern: chat_pipeline.add_component($NAME, $TOOL)
+    metadata:
+      references:
+        - https://rasa.com/docs/rasa/custom-actions/
+        - https://rasa.com/docs/rasa/training-data-format/
+      category: maintainability
+      technology:
+        - genAI
+        - conversational-ai
+        - tools
+        - rasa
+        - nlp
+        - chatbot
+      confidence: MEDIUM
+      subcategory:
+        - tools

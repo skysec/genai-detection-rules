@@ -1,0 +1,84 @@
+rules:
+  - id: detect-embeddings-huggingface
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Hugging Face embeddings usage: Sentence transformers, text embeddings, or vector generation patterns"
+    pattern-either:
+      # Sentence Transformers imports
+      - pattern: from sentence_transformers import SentenceTransformer
+      - pattern: import sentence_transformers
+      # Model instantiation
+      - pattern: $MODEL = SentenceTransformer($NAME)
+      - pattern: embedding_model = SentenceTransformer(...)
+      - pattern: SentenceTransformer('all-MiniLM-L6-v2')
+      - pattern: SentenceTransformer('all-mpnet-base-v2')
+      - pattern: SentenceTransformer($MODEL_NAME)
+      # Embedding generation
+      - pattern: $EMBEDDINGS = $MODEL.encode($TEXTS)
+      - pattern: embeddings = embedding_model.encode(...)
+      - pattern: $MODEL.encode([$TEXT])
+      - pattern: $MODEL.encode(documents)
+      # Vector database implementation
+      - pattern: |
+          class SimpleVectorDB:
+              def __init__(self, embedding_model):
+                  self.embedding_model = embedding_model
+                  ...
+      - pattern: |
+          class $CLASS:
+              def __init__(self):
+                  self.embeddings_model = SentenceTransformer($MODEL)
+                  ...
+      # Vector search methods
+      - pattern: |
+          def search(self, query, top_k=$K):
+              query_embedding = self.embedding_model.encode([$QUERY])
+              ...
+      - pattern: |
+          def semantic_search(self, $ARGS) -> list:
+              ...
+      # Similarity computation
+      - pattern: from sklearn.metrics.pairwise import cosine_similarity
+      - pattern: similarities = cosine_similarity($QUERY_EMB, $EMBEDDINGS)
+      - pattern: cosine_similarity($A, $B)
+      # Embedding storage and retrieval
+      - pattern: self.embeddings = $MODEL.encode($DOCS)
+      - pattern: new_embeddings = self.embedding_model.encode($DOCS)
+      - pattern: doc_embeddings = self.embeddings.encode($DOCUMENTS)
+      # Best match finding
+      - pattern: best_match_idx = np.argmax($SIMILARITIES)
+      - pattern: top_indices = np.argsort($SIMILARITIES)[::-1][:$TOP_K]
+      - pattern: np.argsort($SIMILARITIES)[::-1]
+      # Vector database operations
+      - pattern: |
+          def add_documents(self, docs):
+              ...
+              new_embeddings = self.embedding_model.encode(docs)
+              ...
+      - pattern: vector_db.add_documents($DOCS)
+      - pattern: vector_db.search($QUERY)
+      # Memory with embeddings
+      - pattern: self.embeddings_model = SentenceTransformer($MODEL)
+      - pattern: current_embedding = self.embeddings_model.encode([$INPUT])
+      - pattern: historical_embeddings = self.embeddings_model.encode($TEXTS)
+      # Toolkit patterns
+      - pattern: |
+          def get_embeddings(self, texts: list) -> np.ndarray:
+              return self.embeddings.encode(texts)
+    metadata:
+      references:
+        - https://www.sbert.net/docs/quickstart.html
+        - https://huggingface.co/sentence-transformers
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - embeddings
+        - sentence-transformers
+        - vector-search
+        - text-embeddings
+        - huggingface
+      confidence: MEDIUM
+      subcategory:
+        - embeddings

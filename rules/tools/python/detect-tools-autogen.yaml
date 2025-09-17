@@ -1,0 +1,60 @@
+rules:
+  - id: detect-tools-autogen
+    languages:
+      - python
+    severity: INFO
+    message: "Detected AutoGen tools usage: Custom tools, function calling, or agent function registration patterns"
+    pattern-either:
+      # AutoGen imports
+      - pattern: from autogen import AssistantAgent
+      - pattern: from autogen import UserProxyAgent
+      - pattern: from autogen import $AGENT
+      - pattern: from autogen.coding import LocalCommandLineCodeExecutor
+      # Agent creation with code execution
+      - pattern: |
+          $AGENT = UserProxyAgent(
+              ...,
+              code_execution_config={...},
+              ...
+          )
+      - pattern: 'code_execution_config={"executor": $EXECUTOR}'
+      - pattern: LocalCommandLineCodeExecutor(...)
+      # Function registration
+      - pattern: $AGENT.register_function(...)
+      - pattern: "$AGENT.register_function(function_map={...})"
+      # Custom agent with tools
+      - pattern: |
+          class $CLASS(AssistantAgent):
+              def __init__(self, $ARGS):
+                  ...
+                  self.register_function(...)
+              ...
+      # Tool method definitions in custom agents
+      - pattern: |
+          def $FUNC(self, $ARGS) -> str:
+              """$DOCSTRING"""
+              ...
+      # Function map patterns
+      - pattern: 'function_map={$FUNC_NAME: self.$METHOD, ...}'
+      - pattern: 'function_map={..., $FUNC_NAME: $METHOD, ...}'
+      # Agent conversation initiation
+      - pattern: $AGENT.initiate_chat($OTHER_AGENT, ...)
+      - pattern: $AGENT.initiate_chat(..., message=$MSG)
+      # Group chat with agents
+      - pattern: GroupChat(agents=[$AGENTS], ...)
+      - pattern: GroupChatManager(groupchat=$CHAT, ...)
+    metadata:
+      references:
+        - https://microsoft.github.io/autogen/docs/tutorial/tool-use
+        - https://microsoft.github.io/autogen/docs/topics/code-execution
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - tools
+        - function-calling
+        - autogen
+        - code-execution
+      confidence: MEDIUM
+      subcategory:
+        - tools

@@ -1,0 +1,67 @@
+rules:
+  - id: detect-tools-huggingface
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Hugging Face tools usage: Custom tools, pipeline usage, or toolkit patterns"
+    pattern-either:
+      # Pipeline imports and usage
+      - pattern: from transformers import pipeline
+      - pattern: $PIPELINE = pipeline($TASK)
+      - pattern: $PIPELINE = pipeline($TASK, model=$MODEL)
+      - pattern: $PIPELINE = pipeline("question-answering")
+      - pattern: $PIPELINE = pipeline("sentiment-analysis")
+      - pattern: $PIPELINE = pipeline("text-generation")
+      - pattern: $PIPELINE = pipeline("summarization")
+      # Pipeline execution
+      - pattern: $PIPELINE($INPUT)
+      - pattern: $PIPELINE(question=$Q, context=$C)
+      - pattern: $PIPELINE(..., max_length=$LEN, ...)
+      # Custom toolkit classes
+      - pattern: |
+          class $CLASS:
+              def __init__(self):
+                  self.$PIPELINE = pipeline(...)
+                  ...
+      # Toolkit method patterns
+      - pattern: |
+          def answer_question(self, $ARGS) -> str:
+              ...
+      - pattern: |
+          def summarize_text(self, $ARGS) -> str:
+              ...
+      - pattern: |
+          def analyze_sentiment(self, $ARGS) -> dict:
+              ...
+      - pattern: |
+          def semantic_search(self, $ARGS) -> list:
+              ...
+      # Pipeline method calls in toolkit
+      - pattern: self.$PIPELINE($INPUT)
+      - pattern: result = $PIPELINE($INPUT)
+      - pattern: $RESULT = self.$ATTR.pipeline(...)
+      # Model and tokenizer usage for tools
+      - pattern: from transformers import AutoTokenizer
+      - pattern: from transformers import AutoModel
+      - pattern: from transformers import AutoModelForCausalLM
+      - pattern: $TOKENIZER = AutoTokenizer.from_pretrained($MODEL)
+      - pattern: $MODEL.generate(...)
+      # Sentence transformers for embeddings in tools
+      - pattern: from sentence_transformers import SentenceTransformer
+      - pattern: $MODEL = SentenceTransformer($NAME)
+      - pattern: $EMBEDDINGS = $MODEL.encode($TEXTS)
+    metadata:
+      references:
+        - https://huggingface.co/docs/transformers/main_classes/pipelines
+        - https://huggingface.co/docs/transformers/tasks/question_answering
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - tools
+        - transformers
+        - huggingface
+        - nlp
+      confidence: MEDIUM
+      subcategory:
+        - tools

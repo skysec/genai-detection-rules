@@ -1,0 +1,83 @@
+rules:
+  - id: detect-memory-autogen
+    languages:
+      - python
+    severity: INFO
+    message: "Detected AutoGen memory usage: Conversation memory, multi-agent chat history, or context retention patterns"
+    pattern-either:
+      # Custom memory class definitions
+      - pattern: |
+          class ConversationMemory:
+              def __init__(self):
+                  self.history = []
+              ...
+      - pattern: |
+          class $CLASS:
+              def __init__(self):
+                  self.conversation_history = []
+                  ...
+      # Memory method patterns
+      - pattern: |
+          def add_message(self, $ARGS):
+              ...
+      - pattern: |
+          def get_recent_context(self, $ARGS) -> str:
+              ...
+      # Custom agent with memory
+      - pattern: |
+          class MemoryAgent(AssistantAgent):
+              def __init__(self, name, memory, **kwargs):
+                  ...
+                  self.memory = memory
+              ...
+      # Memory usage in agent
+      - pattern: |
+          def generate_reply(self, messages=None, sender=None, exclude=None):
+              context = self.memory.get_recent_context()
+              ...
+      # Memory storage patterns
+      - pattern: self.history.append($ITEM)
+      - pattern: self.memory.add_message($SENDER, $MESSAGE)
+      - pattern: '{"sender": $SENDER, "message": $MESSAGE, "timestamp": $TIME}'
+      # Agent conversation initiation
+      - pattern: $AGENT.initiate_chat($OTHER, message=$MSG)
+      - pattern: user_proxy.initiate_chat(assistant, ...)
+      # Group chat patterns
+      - pattern: GroupChat(agents=[$AGENTS], messages=[], ...)
+      - pattern: GroupChatManager(groupchat=$CHAT, ...)
+      # Memory context integration
+      - pattern: context = self.memory.get_recent_context()
+      - pattern: system_message = f"{self.system_message}\n\nRecent conversation context:\n{context}"
+      # Message history patterns
+      - pattern: messages=[]
+      - pattern: max_round=$N
+      - pattern: max_consecutive_auto_reply=$N
+      # Memory timestamp patterns
+      - pattern: '"timestamp": time.time()'
+      - pattern: import time
+      # Memory initialization
+      - pattern: memory = ConversationMemory()
+      - pattern: $MEMORY = $CLASS()
+      # Agent with memory initialization
+      - pattern: |
+          memory_assistant = MemoryAgent(
+              name=$NAME,
+              memory=memory,
+              ...
+          )
+    metadata:
+      references:
+        - https://microsoft.github.io/autogen/docs/topics/groupchat/
+        - https://microsoft.github.io/autogen/docs/tutorial/conversation-patterns/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - memory
+        - conversation
+        - autogen
+        - multi-agent
+        - chat-history
+      confidence: MEDIUM
+      subcategory:
+        - memory

@@ -1,0 +1,122 @@
+rules:
+  - id: detect-mcp-server-python
+    languages:
+      - python
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) server implementation: Import patterns, decorator usage, or server initialization"
+    pattern-either:
+      # Core MCP server imports - HIGH CONFIDENCE
+      - pattern: import mcp
+      - pattern: from mcp import $MCP_COMPONENT
+      - pattern: from mcp.server import $SERVER_COMPONENT
+      - pattern: from mcp.server.fastmcp import FastMCP
+      - pattern: from mcp.server.fastmcp import $FASTMCP_COMPONENT
+      - pattern: from mcp.server.session import ServerSession
+      - pattern: from mcp.server.session import $SESSION_COMPONENT
+
+      # FastMCP class instantiation - HIGH CONFIDENCE
+      - pattern: FastMCP(...)
+      - pattern: $SERVER = FastMCP(...)
+      - pattern: |
+          $MCP = FastMCP($NAME)
+          ...
+
+      # MCP tool decorators - HIGH CONFIDENCE
+      - pattern: |
+          @$SERVER.tool
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$SERVER.tool
+          async def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.tool
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.tool
+          async def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.tool(...)
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.tool(...)
+          async def $FUNC(...):
+            ...
+
+      # MCP resource decorators - HIGH CONFIDENCE
+      - pattern: |
+          @$SERVER.resource(...)
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.resource(...)
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.resource(...)
+          async def $FUNC(...):
+            ...
+
+      # MCP prompt decorators - HIGH CONFIDENCE
+      - pattern: |
+          @$SERVER.prompt
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.prompt
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.prompt(...)
+          def $FUNC(...):
+            ...
+
+      # MCP server running patterns - HIGH CONFIDENCE
+      # Only match run() calls in main blocks where MCP is likely involved
+      - pattern: |
+          if __name__ == "__main__":
+              $MCP.run()
+      - pattern: |
+          if __name__ == "__main__":
+              $SERVER.run()
+      # Match specific run patterns that are more likely to be MCP
+      - pattern: |
+          $MCP = FastMCP(...)
+          ...
+          $MCP.run()
+      - pattern: |
+          $SERVER = FastMCP(...)
+          ...
+          $SERVER.run()
+
+      # MCP Context import and usage - MEDIUM CONFIDENCE
+      - pattern: from mcp.server.fastmcp import Context
+      - pattern: from mcp import Context
+      - pattern: |
+          def $FUNC(..., context: Context, ...):
+            ...
+      - pattern: |
+          async def $FUNC(..., context: Context, ...):
+            ...
+
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/
+        - https://github.com/modelcontextprotocol/python-sdk
+        - https://github.com/modelcontextprotocol/servers
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - MCP
+        - model-context-protocol
+        - server
+        - tools
+        - resources
+      confidence: HIGH
+      subcategory:
+        - mcp-server

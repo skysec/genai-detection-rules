@@ -1,0 +1,94 @@
+rules:
+  - id: detect-memory-rasa
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Rasa memory usage: Conversation memory, session tracking, or context retention patterns"
+    pattern-either:
+      # Custom memory class definitions
+      - pattern: |
+          class ConversationMemory:
+              def __init__(self):
+                  self.sessions = {}
+              ...
+      - pattern: |
+          class $CLASS:
+              def __init__(self):
+                  self.conversation_history = []
+                  ...
+      # Memory method patterns
+      - pattern: |
+          def get_session_data(self, session_id: str) -> Dict:
+              ...
+      - pattern: |
+          def add_message(self, $ARGS):
+              ...
+      - pattern: |
+          def update_preferences(self, $ARGS):
+              ...
+      # Session data structure
+      - pattern: |
+          self.sessions[session_id] = {
+              'conversation_history': [],
+              'user_preferences': {},
+              'context': {}
+          }
+      # Memory storage patterns
+      - pattern: session_data['conversation_history'].append($ITEM)
+      - pattern: session_data['user_preferences'].update($PREFS)
+      - pattern: '{"message": $MSG, "intent": $INTENT, "entities": $ENTITIES, "timestamp": datetime.now()}'
+      # Custom action with memory
+      - pattern: |
+          class ActionWithMemory(Action):
+              def __init__(self):
+                  self.memory = ConversationMemory()
+              ...
+      # Memory usage in action run
+      - pattern: |
+          def run(self, dispatcher: CollectingDispatcher,
+                  tracker: Tracker,
+                  domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+              session_id = tracker.sender_id
+              ...
+      # Memory context integration
+      - pattern: session_id = tracker.sender_id
+      - pattern: latest_message = tracker.latest_message
+      - pattern: self.memory.add_message($SESSION_ID, ...)
+      # Memory retrieval
+      - pattern: session_data = self.memory.get_session_data($SESSION_ID)
+      - pattern: history_count = len(session_data['conversation_history'])
+      # Vector store for memory
+      - pattern: |
+          class RasaVectorStore:
+              def __init__(self):
+                  self.embeddings_model = SentenceTransformer($MODEL)
+                  self.documents = []
+                  self.embeddings = []
+              ...
+      # Memory search patterns
+      - pattern: $VECTOR_STORE.search($QUERY)
+      - pattern: query_embedding = self.embeddings_model.encode([$QUERY])[0]
+      # Memory initialization
+      - pattern: memory = ConversationMemory()
+      - pattern: $MEMORY = $CLASS()
+      # Context patterns in actions
+      - pattern: user_message = tracker.latest_message.get('text', '')
+      - pattern: results = self.vector_store.search($MESSAGE)
+      # Memory-based response patterns
+      - pattern: f"I remember our conversation. We've exchanged {history_count} messages."
+      - pattern: "Based on my knowledge: {results[0]['document']}"
+    metadata:
+      references:
+        - https://rasa.com/docs/rasa/tracker-stores/
+        - https://rasa.com/docs/rasa/conversation-driven-development/
+      category: maintainability
+      technology:
+        - genAI
+        - conversational-ai
+        - memory
+        - rasa
+        - session-tracking
+        - chat-history
+      confidence: MEDIUM
+      subcategory:
+        - memory

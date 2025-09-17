@@ -1,0 +1,64 @@
+rules:
+  - id: detect-embeddings-langchain
+    languages:
+      - python
+    severity: INFO
+    message: "Detected LangChain embeddings usage: Text embeddings, vector generation, or embedding model patterns"
+    pattern-either:
+      # Embedding imports
+      - pattern: from langchain_openai import OpenAIEmbeddings
+      - pattern: from langchain_community.embeddings import $EMBEDDINGS
+      - pattern: from langchain.embeddings import $EMBEDDINGS
+      - pattern: from langchain_huggingface import HuggingFaceEmbeddings
+      - pattern: from langchain_cohere import CohereEmbeddings
+      # Embedding instantiation
+      - pattern: $EMBEDDINGS = OpenAIEmbeddings()
+      - pattern: embeddings = OpenAIEmbeddings(...)
+      - pattern: $VAR = HuggingFaceEmbeddings(...)
+      - pattern: $VAR = CohereEmbeddings(...)
+      # Vector store creation with embeddings
+      - pattern: from langchain_chroma import Chroma
+      - pattern: from langchain_pinecone import Pinecone
+      - pattern: from langchain_weaviate import Weaviate
+      - pattern: vectorstore = Chroma.from_documents($DOCS, embeddings)
+      - pattern: $STORE = $VECTORSTORE.from_documents($DOCS, $EMBEDDINGS)
+      - pattern: Chroma.from_documents(..., embeddings=...)
+      # Embedding usage patterns
+      - pattern: embeddings.embed_documents($DOCS)
+      - pattern: embeddings.embed_query($QUERY)
+      - pattern: $EMBEDDINGS.embed_documents(...)
+      - pattern: $EMBEDDINGS.embed_query(...)
+      # Vector store with embedding configuration
+      - pattern: |
+          vectorstore = $STORE(
+              ...,
+              embedding_function=$EMBEDDINGS,
+              ...
+          )
+      # Similarity search (implies embeddings)
+      - pattern: vectorstore.similarity_search($QUERY)
+      - pattern: $STORE.similarity_search(..., k=$K)
+      - pattern: vectorstore.similarity_search_with_score($QUERY)
+      # Document processing for embeddings
+      - pattern: from langchain.text_splitter import CharacterTextSplitter
+      - pattern: from langchain.text_splitter import RecursiveCharacterTextSplitter
+      - pattern: text_splitter = CharacterTextSplitter(...)
+      - pattern: texts = text_splitter.split_documents($DOCS)
+      # Embedding-based retrieval
+      - pattern: vectorstore.as_retriever()
+      - pattern: '$STORE.as_retriever(search_kwargs={"k": $K})'
+      - pattern: 'search_kwargs={"k": $K}'
+    metadata:
+      references:
+        - https://python.langchain.com/docs/modules/data_connection/text_embedding/
+        - https://python.langchain.com/docs/integrations/text_embedding/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - embeddings
+        - vector-search
+        - text-embeddings
+      confidence: MEDIUM
+      subcategory:
+        - embeddings

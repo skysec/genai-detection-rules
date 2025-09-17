@@ -1,0 +1,130 @@
+rules:
+  - id: detect-mcp-server-typescript
+    languages:
+      - js
+      - ts
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) server implementation: Import patterns, method usage, or server initialization"
+    pattern-either:
+      # Core MCP server imports - HIGH CONFIDENCE
+      - pattern: import { $IMPORT } from "@modelcontextprotocol/sdk/server"
+      - pattern: import { $IMPORT } from "@modelcontextprotocol/sdk/server/index.js"
+      - pattern: import { $IMPORT } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { $IMPORT } from "@modelcontextprotocol/sdk/types.js"
+      - pattern: import { Server } from "@modelcontextprotocol/sdk/server"
+      - pattern: import { Server, $OTHER } from "@modelcontextprotocol/sdk/server"
+      - pattern: import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio"
+      - pattern: import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse"
+
+      # MCP types imports - HIGH CONFIDENCE
+      - pattern: import { ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { CallToolRequestSchema } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { ListResourcesRequestSchema } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { ReadResourceRequestSchema } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { ListPromptsRequestSchema } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { GetPromptRequestSchema } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { $SCHEMA } from "@modelcontextprotocol/sdk/types"
+
+      # MCP Server class instantiation - HIGH CONFIDENCE
+      - pattern: new Server(...)
+      - pattern: $SERVER = new Server(...)
+      - pattern: |
+          $SERVER = new Server({
+            ...
+          })
+
+      # MCP request handlers - HIGH CONFIDENCE
+      - pattern: |
+          $SERVER.setRequestHandler(ListToolsRequestSchema, ...)
+      - pattern: |
+          $SERVER.setRequestHandler(CallToolRequestSchema, ...)
+      - pattern: |
+          $SERVER.setRequestHandler(ListResourcesRequestSchema, ...)
+      - pattern: |
+          $SERVER.setRequestHandler(ReadResourceRequestSchema, ...)
+      - pattern: |
+          $SERVER.setRequestHandler(ListPromptsRequestSchema, ...)
+      - pattern: |
+          $SERVER.setRequestHandler(GetPromptRequestSchema, ...)
+      - pattern: |
+          $SERVER.setRequestHandler($SCHEMA, ...)
+
+      # MCP transport setup patterns - HIGH CONFIDENCE
+      - pattern: |
+          $TRANSPORT = new StdioServerTransport()
+      - pattern: |
+          $TRANSPORT = new SSEServerTransport(...)
+      - pattern: |
+          $SERVER.connect($TRANSPORT)
+
+      # MCP server connection patterns - HIGH CONFIDENCE
+      - pattern: |
+          $SERVER.connect(new StdioServerTransport())
+      - pattern: |
+          $SERVER.connect(new SSEServerTransport(...))
+      - pattern: |
+          await $SERVER.connect($TRANSPORT)
+
+      # MCP specific method patterns - HIGH CONFIDENCE
+      - pattern: |
+          $SERVER.setRequestHandler($SCHEMA, async ($REQUEST) => {
+            ...
+          })
+      - pattern: |
+          $SERVER.setRequestHandler($SCHEMA, ($REQUEST) => {
+            ...
+          })
+
+      # Tool definition patterns - HIGH CONFIDENCE
+      - pattern: |
+          {
+            name: $TOOL_NAME,
+            description: $DESCRIPTION,
+            inputSchema: {
+              type: "object",
+              properties: $PROPERTIES
+            }
+          }
+
+      # Resource definition patterns - HIGH CONFIDENCE
+      - pattern: |
+          {
+            uri: $URI,
+            name: $NAME,
+            description: $DESCRIPTION,
+            mimeType: $MIME_TYPE
+          }
+
+      # Prompt definition patterns - HIGH CONFIDENCE
+      - pattern: |
+          {
+            name: $PROMPT_NAME,
+            description: $DESCRIPTION,
+            arguments: $ARGUMENTS
+          }
+
+      # MCP error handling patterns - MEDIUM CONFIDENCE
+      - pattern: |
+          throw new McpError($ERROR_CODE, $MESSAGE)
+      - pattern: |
+          new McpError($ERROR_CODE, $MESSAGE)
+
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/
+        - https://github.com/modelcontextprotocol/typescript-sdk
+        - https://github.com/modelcontextprotocol/servers
+        - https://spec.modelcontextprotocol.io/specification/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - MCP
+        - model-context-protocol
+        - server
+        - tools
+        - resources
+        - prompts
+      confidence: HIGH
+      subcategory:
+        - mcp-server

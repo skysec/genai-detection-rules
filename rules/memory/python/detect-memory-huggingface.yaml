@@ -1,0 +1,83 @@
+rules:
+  - id: detect-memory-huggingface
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Hugging Face memory usage: Chat history, conversation memory, or context retention patterns"
+    pattern-either:
+      # Chat history in model generation
+      - pattern: chat_history_ids = None
+      - pattern: chat_history = None
+      - pattern: bot_input_ids = torch.cat([$HISTORY, $INPUT], dim=-1)
+      - pattern: torch.cat([$CHAT_HISTORY, $USER_INPUT], ...)
+      # Chat conversation loop
+      - pattern: |
+          while True:
+              user_input = input("You: ")
+              ...
+              response, chat_history = generate_response($INPUT, chat_history)
+              ...
+      # Generate response with history
+      - pattern: |
+          def generate_response(input_text, chat_history_ids=None):
+              ...
+      - pattern: generate_response($INPUT, $HISTORY)
+      # Custom memory class definitions
+      - pattern: |
+          class ConversationMemory:
+              def __init__(self, max_history=$N):
+                  self.history = []
+                  self.max_history = max_history
+                  ...
+      # Memory method patterns
+      - pattern: |
+          def add_exchange(self, $ARGS):
+              ...
+      - pattern: |
+          def get_relevant_context(self, $ARGS) -> str:
+              ...
+      # Memory storage patterns
+      - pattern: self.history.append($EXCHANGE)
+      - pattern: 'exchange = {"user": $USER, "bot": $BOT, "timestamp": $TIME}'
+      - pattern: '{"user": $USER_INPUT, "bot": $BOT_RESPONSE, "timestamp": torch.tensor($TIME)}'
+      # Memory truncation
+      - pattern: self.history = self.history[-$MAX_HISTORY:]
+      - pattern: len(self.history) > self.max_history
+      # Context retrieval with embeddings
+      - pattern: current_embedding = self.embeddings_model.encode([$INPUT])
+      - pattern: historical_texts = [f"{ex['user']} {ex['bot']}" for ex in self.history]
+      - pattern: historical_embeddings = self.embeddings_model.encode($TEXTS)
+      # Similarity-based context
+      - pattern: similarities = cosine_similarity($CURRENT, $HISTORICAL)[0]
+      - pattern: top_indices = np.argsort($SIMILARITIES)[::-1][:$TOP_K]
+      # Memory context formatting
+      - pattern: "context += f\"Previous: User: {exchange['user']} Bot: {exchange['bot']}\\n\""
+      - pattern: "f\"Previous: User: {$USER} Bot: {$BOT}\\n\""
+      # Memory initialization
+      - pattern: memory = ConversationMemory()
+      - pattern: $MEMORY = ConversationMemory($MAX_HISTORY)
+      # Sentence transformers for memory
+      - pattern: self.embeddings_model = SentenceTransformer($MODEL)
+      - pattern: from sentence_transformers import SentenceTransformer
+      # Chat dataset for memory
+      - pattern: |
+          class ChatDataset(Dataset):
+              def __init__(self, conversations, tokenizer, max_length=$LEN):
+                  self.conversations = conversations
+                  ...
+    metadata:
+      references:
+        - https://huggingface.co/docs/transformers/main_classes/text_generation
+        - https://huggingface.co/microsoft/DialoGPT-medium
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - memory
+        - conversation
+        - huggingface
+        - transformers
+        - chat-history
+      confidence: MEDIUM
+      subcategory:
+        - memory

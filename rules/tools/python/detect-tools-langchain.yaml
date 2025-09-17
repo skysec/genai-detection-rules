@@ -1,0 +1,58 @@
+rules:
+  - id: detect-tools-langchain
+    languages:
+      - python
+    severity: INFO
+    message: "Detected LangChain tools usage: Custom tools, function calling, or tool execution patterns"
+    pattern-either:
+      # Specific tool imports
+      - pattern: from langchain.tools import BaseTool
+      - pattern: from langchain.tools import $TOOL
+      - pattern: import langchain.tools
+      # Agent imports with tools
+      - pattern: from langchain.agents import initialize_agent
+      - pattern: from langchain.agents import AgentType
+      - pattern: from langchain.agents import $AGENT
+      # Tool class definitions
+      - pattern: |
+          class $CLASS(BaseTool):
+              ...
+      # Agent initialization patterns
+      - pattern: initialize_agent(tools=$TOOLS, ...)
+      - pattern: initialize_agent(..., tools=$TOOLS, ...)
+      - pattern: $AGENT = initialize_agent(...)
+      # Agent execution patterns
+      - pattern: $AGENT.run($QUERY)
+      - pattern: $AGENT.invoke($QUERY)
+      - pattern: $AGENT($QUERY)
+      # Tool method implementations
+      - pattern: |
+          def _run(self, $ARGS) -> str:
+              ...
+      - pattern: |
+          async def _arun(self, $ARGS) -> str:
+              ...
+      # Tool registration and function calling patterns
+      - pattern: $VAR.register_function($FUNC)
+      - pattern: $OBJ.register_function(...)
+      - pattern: $AGENT.tools.append($TOOL)
+      - pattern: $AGENT.add_tool($TOOL)
+      # ConversationChain with tools
+      - pattern: from langchain.chains import ConversationChain
+      - pattern: $CHAIN = ConversationChain(...)
+      # Function calling patterns
+      - pattern: $VAR.call_function($FUNC)
+      - pattern: $OBJ.call_function(...)
+    metadata:
+      references:
+        - https://python.langchain.com/docs/how_to/custom_tools
+        - https://python.langchain.com/docs/tutorials/agents
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - tools
+        - function-calling
+      confidence: MEDIUM
+      subcategory:
+        - tools

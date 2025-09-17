@@ -1,0 +1,61 @@
+rules:
+  - id: detect-tools-semantic-kernel
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Semantic Kernel tools usage: Custom tools, function calling, or kernel function patterns"
+    pattern-either:
+      # Semantic Kernel imports
+      - pattern: import semantic_kernel as sk
+      - pattern: from semantic_kernel import Kernel
+      - pattern: from semantic_kernel.functions import kernel_function
+      - pattern: from semantic_kernel.core_plugins import $PLUGIN
+      # Kernel initialization
+      - pattern: kernel = sk.Kernel()
+      - pattern: $KERNEL = Kernel()
+      # Plugin imports and additions
+      - pattern: kernel.add_plugin($PLUGIN, plugin_name=$NAME)
+      - pattern: $KERNEL.add_plugin(..., plugin_name=...)
+      - pattern: from semantic_kernel.core_plugins import TextPlugin
+      - pattern: from semantic_kernel.core_plugins import TimePlugin
+      # Function decorators
+      - pattern: |
+          @kernel_function(...)
+          def $FUNC($ARGS):
+              ...
+      - pattern: |
+          @kernel_function(
+              description=$DESC,
+              name=$NAME
+          )
+          def $FUNC($ARGS):
+              ...
+      # Kernel function creation
+      - pattern: kernel.create_function_from_prompt(...)
+      - pattern: $KERNEL.create_function_from_prompt(prompt=$PROMPT, ...)
+      # Function invocation
+      - pattern: kernel.invoke($FUNC, ...)
+      - pattern: $KERNEL.invoke(...)
+      # Plugin class definitions
+      - pattern: |
+          class $CLASS:
+              @kernel_function(...)
+              def $FUNC(self, $ARGS):
+                  ...
+      # Service addition
+      - pattern: kernel.add_service($SERVICE)
+      - pattern: $KERNEL.add_service(...)
+    metadata:
+      references:
+        - https://learn.microsoft.com/en-us/semantic-kernel/agents/plugins/
+        - https://learn.microsoft.com/en-us/semantic-kernel/concepts/plugins/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - tools
+        - function-calling
+        - semantic-kernel
+      confidence: MEDIUM
+      subcategory:
+        - tools

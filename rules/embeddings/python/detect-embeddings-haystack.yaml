@@ -1,0 +1,64 @@
+rules:
+  - id: detect-embeddings-haystack
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Haystack embeddings usage: Text embeddings, document embeddings, or vector generation patterns"
+    pattern-either:
+      # Embedding component imports
+      - pattern: from haystack.components.embedders import OpenAITextEmbedder
+      - pattern: from haystack.components.embedders import OpenAIDocumentEmbedder
+      - pattern: from haystack.components.embedders import $EMBEDDER
+      - pattern: from haystack.components.embedders import SentenceTransformersTextEmbedder
+      - pattern: from haystack.components.embedders import SentenceTransformersDocumentEmbedder
+      # Embedder instantiation
+      - pattern: doc_embedder = OpenAIDocumentEmbedder()
+      - pattern: text_embedder = OpenAITextEmbedder()
+      - pattern: $EMBEDDER = OpenAITextEmbedder(...)
+      - pattern: $EMBEDDER = OpenAIDocumentEmbedder(...)
+      - pattern: $VAR = SentenceTransformersTextEmbedder(...)
+      # Document store with embeddings
+      - pattern: from haystack.document_stores import InMemoryDocumentStore
+      - pattern: document_store = InMemoryDocumentStore()
+      - pattern: $STORE = InMemoryDocumentStore(...)
+      # Embedding process
+      - pattern: embedded_docs = doc_embedder.run(documents=$DOCS)
+      - pattern: $RESULT = $EMBEDDER.run(...)
+      - pattern: doc_embedder.run(documents=...)
+      - pattern: text_embedder.run(text=...)
+      # Document storage with embeddings
+      - pattern: document_store.write_documents($EMBEDDED_DOCS["documents"])
+      - pattern: $STORE.write_documents(...)
+      # Retriever with embeddings
+      - pattern: from haystack.components.retrievers import InMemoryEmbeddingRetriever
+      - pattern: retriever = InMemoryEmbeddingRetriever(document_store=$STORE)
+      - pattern: $RETRIEVER = InMemoryEmbeddingRetriever(...)
+      # Pipeline with embedding components
+      - pattern: $PIPELINE.add_component("text_embedder", text_embedder)
+      - pattern: $PIPELINE.add_component("doc_embedder", doc_embedder)
+      - pattern: $PIPELINE.add_component(..., $EMBEDDER)
+      # Pipeline connections for embeddings
+      - pattern: $PIPELINE.connect("text_embedder.embedding", "retriever.query_embedding")
+      - pattern: $PIPELINE.connect("$EMBEDDER.embedding", ...)
+      # Embedding-based search
+      - pattern: query_embedding=$EMBEDDING
+      - pattern: '"text_embedder": {"text": $TEXT}'
+      # Document creation for embeddings
+      - pattern: from haystack import Document
+      - pattern: documents = [Document(content=$CONTENT), ...]
+      - pattern: Document(content=...)
+    metadata:
+      references:
+        - https://docs.haystack.deepset.ai/docs/embedders
+        - https://docs.haystack.deepset.ai/docs/retrievers
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - embeddings
+        - vector-search
+        - text-embeddings
+        - document-embeddings
+      confidence: MEDIUM
+      subcategory:
+        - embeddings

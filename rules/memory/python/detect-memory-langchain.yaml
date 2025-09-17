@@ -1,0 +1,58 @@
+rules:
+  - id: detect-memory-langchain
+    languages:
+      - python
+    severity: INFO
+    message: "Detected LangChain memory usage: Conversation memory, chat history, or context retention patterns"
+    pattern-either:
+      # Memory imports
+      - pattern: from langchain.memory import ConversationBufferMemory
+      - pattern: from langchain.memory import ConversationSummaryMemory
+      - pattern: from langchain.memory import ConversationBufferWindowMemory
+      - pattern: from langchain.memory import ConversationSummaryBufferMemory
+      - pattern: from langchain.memory import $MEMORY
+      - pattern: from langchain.chains import ConversationChain
+      # Memory instantiation
+      - pattern: $MEMORY = ConversationBufferMemory()
+      - pattern: $MEMORY = ConversationSummaryMemory(llm=$LLM)
+      - pattern: $MEMORY = ConversationBufferWindowMemory(k=$K)
+      - pattern: buffer_memory = ConversationBufferMemory(...)
+      - pattern: summary_memory = ConversationSummaryMemory(...)
+      # Conversation chain with memory
+      - pattern: |
+          $CHAIN = ConversationChain(
+              llm=$LLM,
+              memory=$MEMORY,
+              ...
+          )
+      - pattern: ConversationChain(..., memory=$MEMORY, ...)
+      # Memory usage patterns
+      - pattern: $CHAIN.predict(input=$INPUT)
+      - pattern: $CONVERSATION.predict(...)
+      - pattern: memory=$MEMORY_VAR
+      # Memory method calls
+      - pattern: $MEMORY.save_context($INPUTS, $OUTPUTS)
+      - pattern: "$MEMORY.load_memory_variables({})"
+      - pattern: $MEMORY.clear()
+      # Chat message history
+      - pattern: from langchain.memory.chat_message_histories import $HISTORY
+      - pattern: from langchain.schema import BaseMessage
+      - pattern: chat_memory=$MEMORY
+      # Memory with external storage
+      - pattern: from langchain.memory.chat_message_histories import RedisChatMessageHistory
+      - pattern: from langchain.memory.chat_message_histories import PostgresChatMessageHistory
+      - pattern: message_history=$HISTORY
+    metadata:
+      references:
+        - https://python.langchain.com/docs/modules/memory/
+        - https://python.langchain.com/docs/modules/memory/types/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - memory
+        - conversation
+        - chat-history
+      confidence: MEDIUM
+      subcategory:
+        - memory

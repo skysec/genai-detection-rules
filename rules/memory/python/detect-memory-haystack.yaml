@@ -1,0 +1,70 @@
+rules:
+  - id: detect-memory-haystack
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Haystack memory usage: Conversation memory, chat history, or context retention patterns"
+    pattern-either:
+      # Custom memory class definitions
+      - pattern: |
+          class ConversationMemory:
+              def __init__(self):
+                  self.history = []
+              ...
+      - pattern: |
+          class $CLASS:
+              def __init__(self):
+                  self.messages = []
+                  ...
+      # Memory method patterns
+      - pattern: |
+          def add_exchange(self, $ARGS):
+              ...
+      - pattern: |
+          def add_message(self, $ARGS):
+              ...
+      - pattern: |
+          def get_context(self, $ARGS) -> str:
+              ...
+      - pattern: |
+          def get_recent_context(self, $ARGS) -> str:
+              ...
+      # Memory storage patterns
+      - pattern: self.history.append($ITEM)
+      - pattern: self.messages.append($ITEM)
+      - pattern: self.conversation_history = []
+      - pattern: conversation_history = []
+      # Memory usage in chat pipeline
+      - pattern: chat_template = $TEMPLATE
+      - pattern: "{% if tools_output %}"
+      - pattern: "Tool Output: {{ tools_output }}"
+      - pattern: "User: {{ query }}"
+      # Context retrieval patterns
+      - pattern: self.history[-$N:]
+      - pattern: recent_history = $LIST[-$N:]
+      - pattern: "max_turns: int = $N"
+      # Memory initialization
+      - pattern: memory = ConversationMemory()
+      - pattern: $MEMORY = $CLASS()
+      # Memory state management
+      - pattern: $MEMORY.history
+      - pattern: $MEMORY.messages
+      - pattern: len($MEMORY.history)
+      # Context formatting
+      - pattern: "context += f\"User: {$USER}\\nAssistant: {$ASSISTANT}\\n\""
+      - pattern: "f\"User: {$VAR}\""
+      - pattern: "f\"Assistant: {$VAR}\""
+    metadata:
+      references:
+        - https://docs.haystack.deepset.ai/docs/chat-agents
+        - https://docs.haystack.deepset.ai/docs/conversational-search
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - memory
+        - conversation
+        - chat-history
+      confidence: MEDIUM
+      subcategory:
+        - memory

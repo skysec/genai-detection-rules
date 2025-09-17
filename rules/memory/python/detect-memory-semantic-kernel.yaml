@@ -1,0 +1,72 @@
+rules:
+  - id: detect-memory-semantic-kernel
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Semantic Kernel memory usage: Conversation memory, chat history, or context retention patterns"
+    pattern-either:
+      # Custom memory class definitions
+      - pattern: |
+          class ConversationMemory:
+              def __init__(self):
+                  self.messages = []
+              ...
+      - pattern: |
+          class $CLASS:
+              def __init__(self):
+                  self.sessions = {}
+                  ...
+      # Memory method patterns
+      - pattern: |
+          def add_message(self, $ARGS):
+              ...
+      - pattern: |
+          def get_context(self) -> str:
+              ...
+      - pattern: |
+          def get_session_data(self, $SESSION_ID) -> Dict:
+              ...
+      # Memory storage patterns
+      - pattern: self.messages.append($ITEM)
+      - pattern: self.sessions[$ID] = $DATA
+      - pattern: conversation_history = []
+      # Message formatting
+      - pattern: '{"role": $ROLE, "content": $CONTENT}'
+      - pattern: 'f"{$ROLE}: {$CONTENT}"'
+      # Context retrieval
+      - pattern: self.messages[-$N:]
+      - pattern: recent_history = $LIST[-$N:]
+      # Memory initialization
+      - pattern: memory = ConversationMemory()
+      - pattern: $MEMORY = $CLASS()
+      # Session management
+      - pattern: session_id = $ID
+      - pattern: $SESSION_DATA = $MEMORY.get_session_data($ID)
+      # Planner with memory context
+      - pattern: from semantic_kernel.planners import BasicPlanner
+      - pattern: planner = BasicPlanner()
+      - pattern: plan = await planner.create_plan($ASK, kernel)
+      # Memory context in function calls
+      - pattern: 'kernel.invoke(..., input=f"{$TEXT} Current time: {$TIME}")'
+      - pattern: await kernel.invoke($FUNC, ...)
+      # Chat history patterns
+      - pattern: from semantic_kernel.connectors.ai.open_ai import OpenAIChatCompletion
+      - pattern: ChatHistory($PROMPT)
+      - pattern: chat_history = ChatHistory(...)
+      - pattern: chatHistory.AddUserMessage($MSG)
+      - pattern: chatHistory.Add($RESPONSE)
+    metadata:
+      references:
+        - https://learn.microsoft.com/en-us/semantic-kernel/concepts/planning/
+        - https://learn.microsoft.com/en-us/semantic-kernel/agents/memory/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - memory
+        - conversation
+        - semantic-kernel
+        - chat-history
+      confidence: MEDIUM
+      subcategory:
+        - memory

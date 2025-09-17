@@ -1,0 +1,45 @@
+rules:
+  - id: detect-tools-llamaindex
+    languages:
+      - python
+    severity: INFO
+    message: "Detected LlamaIndex tools usage: Custom tools, function calling, or tool execution patterns"
+    pattern-either:
+      # Tool imports
+      - pattern: from llama_index.core.tools import FunctionTool
+      - pattern: from llama_index.core.tools import $TOOL
+      - pattern: from llama_index.core.agent import ReActAgent
+      - pattern: from llama_index.core.agent import $AGENT
+      # Tool creation patterns
+      - pattern: FunctionTool.from_defaults(fn=$FUNC)
+      - pattern: FunctionTool.from_defaults(..., fn=$FUNC, ...)
+      - pattern: $TOOL = FunctionTool.from_defaults(...)
+      # Agent creation with tools
+      - pattern: ReActAgent.from_tools([$TOOLS], ...)
+      - pattern: $AGENT = ReActAgent.from_tools(...)
+      # Agent execution
+      - pattern: $AGENT.chat($QUERY)
+      - pattern: $AGENT.query($QUERY)
+      # Function tool definitions
+      - pattern: |
+          def $FUNC($ARGS) -> str:
+              """$DOCSTRING"""
+              ...
+      # Tool decorators and annotations
+      - pattern: |
+          @$DECORATOR
+          def $FUNC($ARGS):
+              ...
+    metadata:
+      references:
+        - https://docs.llamaindex.ai/en/stable/module_guides/deploying/agents/tools/
+        - https://docs.llamaindex.ai/en/stable/examples/agent/react_agent/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - tools
+        - function-calling
+      confidence: MEDIUM
+      subcategory:
+        - tools

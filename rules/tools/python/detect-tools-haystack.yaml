@@ -1,0 +1,41 @@
+rules:
+  - id: detect-tools-haystack
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Haystack tools usage: Custom tools, function calling, or tool execution patterns"
+    pattern-either:
+      # Tool imports
+      - pattern: from haystack.components.tools import Tool
+      - pattern: from haystack.components.tools import $TOOL
+      - pattern: from haystack import Tool
+      # Tool class definitions
+      - pattern: |
+          class $CLASS(Tool):
+              ...
+      # Tool method implementations
+      - pattern: |
+          def run(self, $ARGS) -> str:
+              """$DOCSTRING"""
+              ...
+      # Pipeline with tools
+      - pattern: $PIPELINE.add_component("$NAME", $TOOL)
+      - pattern: $PIPELINE.add_component(..., $TOOL)
+      # Tool execution in pipeline
+      - pattern: '$PIPELINE.run({..., "$TOOL_NAME": {...}, ...})'
+      # Custom tool instantiation
+      - pattern: $TOOL = $CLASS()
+      - pattern: $TOOLS = [$TOOL_LIST]
+    metadata:
+      references:
+        - https://docs.haystack.deepset.ai/docs/tools
+        - https://docs.haystack.deepset.ai/docs/custom-tools
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - tools
+        - function-calling
+      confidence: MEDIUM
+      subcategory:
+        - tools

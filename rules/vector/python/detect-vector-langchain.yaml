@@ -1,0 +1,77 @@
+rules:
+  - id: detect-vector-langchain
+    languages:
+      - python
+    severity: INFO
+    message: "Detected LangChain vector/retrieval usage: Vector search, similarity search, or RAG implementation patterns"
+    pattern-either:
+      # Vector store imports
+      - pattern: from langchain_chroma import Chroma
+      - pattern: from langchain_pinecone import Pinecone
+      - pattern: from langchain_weaviate import Weaviate
+      - pattern: from langchain_faiss import FAISS
+      - pattern: from langchain.vectorstores import $VECTORSTORE
+      # Vector store creation
+      - pattern: vectorstore = Chroma.from_documents($DOCS, $EMBEDDINGS)
+      - pattern: $STORE = $VECTORSTORE.from_documents(...)
+      - pattern: vectorstore = Chroma(..., embedding_function=$EMBEDDINGS)
+      # Similarity search
+      - pattern: vectorstore.similarity_search($QUERY)
+      - pattern: $STORE.similarity_search(..., k=$K)
+      - pattern: vectorstore.similarity_search_with_score($QUERY)
+      - pattern: $STORE.similarity_search_with_relevance_scores(...)
+      - pattern: results = vectorstore.similarity_search(...)
+      # Retriever patterns
+      - pattern: vectorstore.as_retriever()
+      - pattern: '$STORE.as_retriever(search_kwargs={"k": $K})'
+      - pattern: retriever = vectorstore.as_retriever(...)
+      - pattern: 'search_kwargs={"k": $K}'
+      # RAG chain imports and creation
+      - pattern: from langchain.chains import RetrievalQA
+      - pattern: from langchain.chains.retrieval_qa import RetrievalQA
+      - pattern: qa = RetrievalQA.from_chain_type(...)
+      - pattern: |
+          $QA = RetrievalQA.from_chain_type(
+              llm=$LLM,
+              chain_type=$TYPE,
+              retriever=$RETRIEVER
+          )
+      # RAG execution
+      - pattern: $QA.run($QUESTION)
+      - pattern: qa.run(...)
+      - pattern: response = qa.run(...)
+      # Document loader for RAG
+      - pattern: from langchain.document_loaders import TextLoader
+      - pattern: from langchain.document_loaders import $LOADER
+      - pattern: loader = TextLoader($FILE)
+      - pattern: documents = loader.load()
+      # Text splitter for chunking
+      - pattern: from langchain.text_splitter import RecursiveCharacterTextSplitter
+      - pattern: from langchain.text_splitter import CharacterTextSplitter
+      - pattern: text_splitter = RecursiveCharacterTextSplitter(...)
+      - pattern: texts = text_splitter.split_documents($DOCS)
+      # Vector store persistence
+      - pattern: vectorstore.persist()
+      - pattern: $STORE.save_local($PATH)
+      - pattern: Chroma.from_documents(..., persist_directory=$DIR)
+      # Advanced retrieval patterns
+      - pattern: retriever=vectorstore.as_retriever(...)
+      - pattern: chain_type="stuff"
+      - pattern: chain_type="map_reduce"
+      - pattern: search_type="similarity"
+      - pattern: search_type="mmr"
+    metadata:
+      references:
+        - https://python.langchain.com/docs/modules/data_connection/vectorstores/
+        - https://python.langchain.com/docs/use_cases/question_answering/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - vector-search
+        - retrieval
+        - RAG
+        - similarity-search
+      confidence: MEDIUM
+      subcategory:
+        - vector

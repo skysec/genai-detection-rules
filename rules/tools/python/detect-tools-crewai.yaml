@@ -1,0 +1,68 @@
+rules:
+  - id: detect-tools-crewai
+    languages:
+      - python
+    severity: INFO
+    message: "Detected CrewAI tools usage: Custom tools, function calling, or agent tool integration patterns"
+    pattern-either:
+      # CrewAI imports
+      - pattern: from crewai import Agent
+      - pattern: from crewai import Task
+      - pattern: from crewai import Crew
+      - pattern: from crewai.tools import BaseTool
+      - pattern: from crewai.tools import $TOOL
+      # Tool class definitions
+      - pattern: |
+          class $CLASS(BaseTool):
+              name: str = $NAME
+              description: str = $DESC
+              ...
+      # Tool method implementation
+      - pattern: |
+          def _run(self, $ARGS) -> str:
+              ...
+      # Agent creation with tools
+      - pattern: |
+          $AGENT = Agent(
+              ...,
+              tools=[$TOOLS],
+              ...
+          )
+      - pattern: tools=[$TOOL_LIST]
+      - pattern: tools=[..., $TOOL, ...]
+      # Task creation with tools
+      - pattern: |
+          $TASK = Task(
+              ...,
+              agent=$AGENT,
+              ...
+          )
+      # Crew assembly and execution
+      - pattern: |
+          $CREW = Crew(
+              agents=[$AGENTS],
+              tasks=[$TASKS],
+              ...
+          )
+      - pattern: $CREW.kickoff()
+      # Tool imports from other frameworks
+      - pattern: from langchain.tools import DuckDuckGoSearchRun
+      - pattern: from langchain.tools import $EXTERNAL_TOOL
+      # Process patterns
+      - pattern: process=Process.sequential
+      - pattern: process=Process.hierarchical
+    metadata:
+      references:
+        - https://docs.crewai.com/how-to/Creating-and-Using-Tools/
+        - https://docs.crewai.com/core-concepts/Tools/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - tools
+        - function-calling
+        - crewai
+        - multi-agent
+      confidence: MEDIUM
+      subcategory:
+        - tools

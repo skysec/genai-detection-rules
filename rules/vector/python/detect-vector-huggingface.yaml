@@ -1,0 +1,102 @@
+rules:
+  - id: detect-vector-huggingface
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Hugging Face vector/retrieval usage: Vector search, similarity search, or custom vector database patterns"
+    pattern-either:
+      # Custom vector database implementation
+      - pattern: |
+          class SimpleVectorDB:
+              def __init__(self, embedding_model):
+                  self.embedding_model = embedding_model
+                  self.documents = []
+                  self.embeddings = None
+              ...
+      - pattern: |
+          class $CLASS:
+              def __init__(self):
+                  self.documents = []
+                  self.embeddings = []
+              ...
+      # Vector database methods
+      - pattern: |
+          def add_documents(self, docs):
+              self.documents.extend(docs)
+              new_embeddings = self.embedding_model.encode(docs)
+              ...
+      - pattern: |
+          def search(self, query, top_k=$K):
+              query_embedding = self.embedding_model.encode([$QUERY])
+              similarities = cosine_similarity(query_embedding, self.embeddings)
+              ...
+      # Similarity computation
+      - pattern: from sklearn.metrics.pairwise import cosine_similarity
+      - pattern: similarities = cosine_similarity($QUERY_EMB, self.embeddings)
+      - pattern: cosine_similarity($A, $B)
+      # Vector storage patterns
+      - pattern: self.embeddings = new_embeddings
+      - pattern: self.embeddings = np.vstack([self.embeddings, new_embeddings])
+      - pattern: if self.embeddings is None
+      # Search result ranking
+      - pattern: top_indices = np.argsort($SIMILARITIES)[::-1][:$TOP_K]
+      - pattern: np.argsort($SIMILARITIES)[::-1]
+      - pattern: best_match_idx = np.argmax($SIMILARITIES)
+      # Search result formatting
+      - pattern: |
+          results = []
+          for idx in top_indices:
+              results.append({
+                  'document': self.documents[idx],
+                  'score': similarities[idx]
+              })
+      - pattern: "{'document': $DOC, 'score': $SCORE}"
+      # Vector database usage
+      - pattern: vector_db = SimpleVectorDB($EMBEDDING_MODEL)
+      - pattern: vector_db.add_documents($DOCS)
+      - pattern: results = vector_db.search($QUERY)
+      - pattern: $VDB.search(..., top_k=$K)
+      # Semantic search implementation
+      - pattern: |
+          def semantic_search(self, query: str, documents: list, top_k: int = $K) -> list:
+              doc_embeddings = self.embeddings.encode(documents)
+              query_embedding = self.embeddings.encode([$QUERY])
+              ...
+      # Vector search in toolkit
+      - pattern: |
+          class HuggingFaceToolkit:
+              ...
+              def semantic_search(self, $ARGS) -> list:
+                  ...
+      # Memory with vector search
+      - pattern: |
+          def get_relevant_context(self, current_input: str, top_k: int = $K) -> str:
+              ...
+              current_embedding = self.embeddings_model.encode([$INPUT])
+              historical_embeddings = self.embeddings_model.encode($TEXTS)
+              similarities = cosine_similarity(current_embedding, historical_embeddings)[0]
+              ...
+      # Embedding-based context retrieval
+      - pattern: current_embedding = self.embeddings_model.encode([$INPUT])
+      - pattern: historical_embeddings = self.embeddings_model.encode($TEXTS)
+      - pattern: similarities = cosine_similarity($CURRENT, $HISTORICAL)[0]
+      # Vector operations
+      - pattern: np.vstack([$ARR1, $ARR2])
+      - pattern: similarities[idx]
+      - pattern: float(similarities[idx])
+    metadata:
+      references:
+        - https://www.sbert.net/examples/applications/semantic-search/README.html
+        - https://huggingface.co/sentence-transformers
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - vector-search
+        - retrieval
+        - similarity-search
+        - sentence-transformers
+        - huggingface
+      confidence: MEDIUM
+      subcategory:
+        - vector

@@ -1,0 +1,88 @@
+rules:
+  - id: detect-embeddings-langchain-typescript
+    languages:
+      - typescript
+      - javascript
+    severity: INFO
+    message: "Detected LangChain embeddings usage: Text embeddings, vector generation, or embedding model patterns"
+    pattern-either:
+      # Embedding imports
+      - pattern: import { OpenAIEmbeddings } from "@langchain/openai"
+      - pattern: import { $EMBEDDINGS } from "@langchain/openai"
+      - pattern: import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf"
+      - pattern: import { CohereEmbeddings } from "@langchain/cohere"
+      - pattern: import { $EMBEDDINGS } from "@langchain/community/embeddings"
+      # Embedding instantiation
+      - pattern: |
+          const embeddings = new OpenAIEmbeddings({
+              ...
+          })
+      - pattern: "new OpenAIEmbeddings({ ... })"
+      - pattern: |
+          const $EMBEDDINGS = new $TYPE({
+              ...
+          })
+      # Vector store creation with embeddings
+      - pattern: import { Chroma } from "@langchain/community/vectorstores/chroma"
+      - pattern: import { Pinecone } from "@langchain/pinecone"
+      - pattern: import { $VECTORSTORE } from "@langchain/community/vectorstores"
+      - pattern: |
+          const vectorStore = await Chroma.fromDocuments(
+              $DOCS,
+              embeddings,
+              ...
+          )
+      - pattern: Chroma.fromDocuments($DOCS, $EMBEDDINGS, ...)
+      - pattern: $VECTORSTORE.fromDocuments(..., embeddings, ...)
+      # Embedding usage patterns
+      - pattern: embeddings.embedDocuments($DOCS)
+      - pattern: embeddings.embedQuery($QUERY)
+      - pattern: $EMBEDDINGS.embedDocuments(...)
+      - pattern: $EMBEDDINGS.embedQuery(...)
+      - pattern: await embeddings.embedDocuments(...)
+      - pattern: await embeddings.embedQuery(...)
+      # Vector store initialization with embeddings
+      - pattern: |
+          const vectorStore = new $VECTORSTORE({
+              ...,
+              embeddings: $EMBEDDINGS,
+              ...
+          })
+      - pattern: "embeddings: $EMBEDDINGS_VAR"
+      # Similarity search (implies embeddings)
+      - pattern: vectorStore.similaritySearch($QUERY)
+      - pattern: $STORE.similaritySearch(..., $K)
+      - pattern: vectorStore.similaritySearchWithScore($QUERY)
+      - pattern: await vectorStore.similaritySearch(...)
+      # Document processing for embeddings
+      - pattern: import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
+      - pattern: import { $SPLITTER } from "langchain/text_splitter"
+      - pattern: |
+          const textSplitter = new RecursiveCharacterTextSplitter({
+              ...
+          })
+      - pattern: textSplitter.splitDocuments($DOCS)
+      # Embedding-based retrieval
+      - pattern: vectorStore.asRetriever()
+      - pattern: "$STORE.asRetriever({ searchKwargs: { k: $K } })"
+      - pattern: "searchKwargs: { k: $K }"
+      # Vector store configuration
+      - pattern: "collectionName: $NAME"
+      - pattern: "textKey: $KEY"
+      - pattern: "metadataKey: $KEY"
+    metadata:
+      references:
+        - https://js.langchain.com/docs/modules/data_connection/text_embedding/
+        - https://js.langchain.com/docs/integrations/text_embedding/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - embeddings
+        - vector-search
+        - text-embeddings
+        - typescript
+        - javascript
+      confidence: MEDIUM
+      subcategory:
+        - embeddings

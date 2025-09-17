@@ -1,0 +1,80 @@
+rules:
+  - id: detect-vector-llamaindex
+    languages:
+      - python
+    severity: INFO
+    message: "Detected LlamaIndex vector/retrieval usage: Vector search, similarity search, or RAG implementation patterns"
+    pattern-either:
+      # Core vector index
+      - pattern: from llama_index.core import VectorStoreIndex
+      - pattern: index = VectorStoreIndex.from_documents($DOCS)
+      - pattern: $INDEX = VectorStoreIndex.from_documents(...)
+      # Vector store imports
+      - pattern: from llama_index.vector_stores.chroma import ChromaVectorStore
+      - pattern: from llama_index.vector_stores import $VECTORSTORE
+      - pattern: from llama_index.vector_stores.pinecone import PineconeVectorStore
+      - pattern: from llama_index.vector_stores.weaviate import WeaviateVectorStore
+      # Vector store creation
+      - pattern: vector_store = ChromaVectorStore(chroma_collection=$COLLECTION)
+      - pattern: $STORE = $VECTORSTORE(...)
+      # Storage context with vector store
+      - pattern: from llama_index.core.storage.storage_context import StorageContext
+      - pattern: storage_context = StorageContext.from_defaults(vector_store=$STORE)
+      - pattern: StorageContext.from_defaults(..., vector_store=...)
+      # Index with storage context
+      - pattern: index = VectorStoreIndex.from_documents($DOCS, storage_context=$CONTEXT)
+      - pattern: VectorStoreIndex.from_documents(..., storage_context=...)
+      # Query engine (RAG)
+      - pattern: query_engine = index.as_query_engine()
+      - pattern: $ENGINE = $INDEX.as_query_engine()
+      - pattern: response = query_engine.query($QUESTION)
+      - pattern: $ENGINE.query(...)
+      # Retriever patterns
+      - pattern: from llama_index.core.retrievers import BaseRetriever
+      - pattern: retriever = index.as_retriever(similarity_top_k=$K)
+      - pattern: $RETRIEVER = $INDEX.as_retriever(...)
+      - pattern: similarity_top_k=$K
+      # Custom retriever implementation
+      - pattern: |
+          class CustomRetriever(BaseRetriever):
+              def __init__(self, vector_index):
+                  self._vector_index = vector_index
+                  ...
+      - pattern: |
+          def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
+              nodes = self._vector_index.as_retriever(...).retrieve(query_bundle)
+              ...
+      # Query bundle and retrieval
+      - pattern: from llama_index.core.schema import QueryBundle
+      - pattern: from llama_index.core.schema import NodeWithScore
+      - pattern: $RETRIEVER.retrieve($QUERY_BUNDLE)
+      # Directory reader for documents
+      - pattern: from llama_index.core import SimpleDirectoryReader
+      - pattern: documents = SimpleDirectoryReader($DIR).load_data()
+      - pattern: $READER = SimpleDirectoryReader(...)
+      # Query engine creation patterns
+      - pattern: from llama_index.core.query_engine import RetrieverQueryEngine
+      - pattern: query_engine = RetrieverQueryEngine.from_args($RETRIEVER)
+      - pattern: RetrieverQueryEngine.from_args(...)
+      # Vector search patterns
+      - pattern: node.score > $THRESHOLD
+      - pattern: filtered_nodes = [node for node in nodes if node.score > $THRESHOLD]
+      # External vector database integration
+      - pattern: import chromadb
+      - pattern: chroma_client = chromadb.EphemeralClient()
+      - pattern: chroma_collection = chroma_client.create_collection($NAME)
+    metadata:
+      references:
+        - https://docs.llamaindex.ai/en/stable/module_guides/storing/vector_stores/
+        - https://docs.llamaindex.ai/en/stable/examples/vector_stores/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - vector-search
+        - retrieval
+        - RAG
+        - similarity-search
+      confidence: MEDIUM
+      subcategory:
+        - vector

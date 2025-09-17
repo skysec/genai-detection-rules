@@ -1,0 +1,78 @@
+rules:
+  - id: detect-tools-semantic-kernel-csharp
+    languages:
+      - csharp
+    severity: INFO
+    message: "Detected Semantic Kernel tools usage: Custom tools, function calling, or kernel function patterns"
+    pattern-either:
+      # Semantic Kernel using statements
+      - pattern: using Microsoft.SemanticKernel;
+      - pattern: using Microsoft.SemanticKernel.Functions;
+      - pattern: using Microsoft.SemanticKernel.Plugins;
+      - pattern: using Microsoft.SemanticKernel.ChatCompletion;
+      # KernelFunction attribute
+      - pattern: |
+          [KernelFunction]
+          public $TYPE $METHOD($PARAMS)
+          {
+              ...
+          }
+      - pattern: |
+          [KernelFunction($ARGS)]
+          public $TYPE $METHOD($PARAMS)
+          {
+              ...
+          }
+      # Kernel initialization
+      - pattern: var kernel = Kernel.CreateBuilder()
+      - pattern: Kernel.CreateBuilder()
+      - pattern: IKernel $VAR = new Kernel()
+      - pattern: var $KERNEL = new Kernel()
+      # Plugin imports and additions
+      - pattern: kernel.ImportPluginFromType<$TYPE>()
+      - pattern: $KERNEL.ImportPluginFromType<$TYPE>($NAME)
+      - pattern: kernel.ImportPluginFromObject($OBJ)
+      - pattern: $KERNEL.ImportPluginFromObject(..., $NAME)
+      # Function invocation patterns
+      - pattern: kernel.InvokeAsync($FUNCTION, ...)
+      - pattern: $KERNEL.InvokeAsync<$TYPE>($FUNCTION)
+      - pattern: await kernel.InvokeAsync(...)
+      - pattern: await $KERNEL.InvokeAsync<$TYPE>(...)
+      # Plugin class definitions
+      - pattern: |
+          public class $CLASS
+          {
+              [KernelFunction]
+              public $TYPE $METHOD($PARAMS)
+              {
+                  ...
+              }
+              ...
+          }
+      # Service registration
+      - pattern: builder.AddOpenAIChatCompletion(...)
+      - pattern: builder.AddAzureOpenAIChatCompletion(...)
+      - pattern: $BUILDER.AddChatCompletionService(...)
+      # Kernel function creation
+      - pattern: KernelFunctionFactory.CreateFromPrompt($PROMPT)
+      - pattern: $KERNEL.CreateFunctionFromPrompt(...)
+      # Function calling with arguments
+      - pattern: new KernelArguments()
+      - pattern: var arguments = new KernelArguments()
+      - pattern: $ARGS.Add($KEY, $VALUE)
+    metadata:
+      references:
+        - https://learn.microsoft.com/en-us/semantic-kernel/agents/plugins/
+        - https://learn.microsoft.com/en-us/semantic-kernel/concepts/plugins/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - tools
+        - function-calling
+        - semantic-kernel
+        - csharp
+        - dotnet
+      confidence: MEDIUM
+      subcategory:
+        - tools

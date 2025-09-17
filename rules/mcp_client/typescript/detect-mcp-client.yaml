@@ -1,0 +1,175 @@
+rules:
+  - id: detect-mcp-client-typescript
+    languages:
+      - js
+      - ts
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) client implementation: Import patterns, client instantiation, or MCP-specific method usage"
+    pattern-either:
+      # Core MCP client imports - HIGH CONFIDENCE
+      - pattern: import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+      - pattern: import { Client } from "@modelcontextprotocol/sdk/client"
+      - pattern: import { $IMPORT } from "@modelcontextprotocol/sdk/client/index.js"
+      - pattern: import { $IMPORT } from "@modelcontextprotocol/sdk/client"
+
+      # MCP transport imports - VERY HIGH CONFIDENCE
+      - pattern: import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
+      - pattern: import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio"
+      - pattern: import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
+      - pattern: import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse"
+      - pattern: import { HttpClientTransport } from "@modelcontextprotocol/sdk/client/http.js"
+      - pattern: import { HttpClientTransport } from "@modelcontextprotocol/sdk/client/http"
+
+      # MCP types and schema imports - HIGH CONFIDENCE
+      - pattern: import { CallToolResultSchema, $REST } from "@modelcontextprotocol/sdk/types.js"
+      - pattern: import { CallToolResultSchema, $REST } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { ListToolsResultSchema, $REST } from "@modelcontextprotocol/sdk/types.js"
+      - pattern: import { ListToolsResultSchema, $REST } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { ListResourcesResultSchema, $REST } from "@modelcontextprotocol/sdk/types.js"
+      - pattern: import { ListResourcesResultSchema, $REST } from "@modelcontextprotocol/sdk/types"
+      - pattern: import { GetPromptResultSchema, $REST } from "@modelcontextprotocol/sdk/types.js"
+      - pattern: import { GetPromptResultSchema, $REST } from "@modelcontextprotocol/sdk/types"
+
+      # Multi-server management import - HIGH CONFIDENCE
+      - pattern: import { MultiServerManager } from "@modelcontextprotocol/sdk/client"
+
+      # STDIO transport instantiation - VERY HIGH CONFIDENCE
+      - pattern: |
+          new StdioClientTransport({
+            command: $COMMAND,
+            args: $ARGS
+          })
+      - pattern: |
+          $TRANSPORT = new StdioClientTransport({
+            ...
+          })
+      - pattern: new StdioClientTransport(...)
+
+      # SSE transport instantiation - VERY HIGH CONFIDENCE
+      - pattern: new SSEClientTransport($URL)
+      - pattern: |
+          $TRANSPORT = new SSEClientTransport(...)
+
+      # HTTP transport instantiation - HIGH CONFIDENCE
+      - pattern: |
+          new HttpClientTransport({
+            url: $URL
+          })
+      - pattern: |
+          $TRANSPORT = new HttpClientTransport({
+            ...
+          })
+
+      # MCP client instantiation - HIGH CONFIDENCE
+      - pattern: |
+          new Client({
+            name: $NAME,
+            version: $VERSION
+          })
+      - pattern: |
+          new Client(
+            { name: $NAME, version: $VERSION },
+            { capabilities: $CAPABILITIES }
+          )
+      - pattern: |
+          $CLIENT = new Client({
+            ...
+          })
+
+      # MCP-specific method calls - VERY HIGH CONFIDENCE (unique to MCP)
+      - pattern: await $CLIENT.listTools()
+      - pattern: $TOOLS = await $CLIENT.listTools()
+      - pattern: await $CLIENT.callTool($NAME, $ARGS)
+      - pattern: $RESULT = await $CLIENT.callTool($NAME, ...)
+      - pattern: await $CLIENT.listResources()
+      - pattern: $RESOURCES = await $CLIENT.listResources()
+      - pattern: await $CLIENT.readResource($URI)
+      - pattern: $CONTENT = await $CLIENT.readResource(...)
+      - pattern: await $CLIENT.listPrompts()
+      - pattern: $PROMPTS = await $CLIENT.listPrompts()
+      - pattern: await $CLIENT.getPrompt($NAME, $ARGS)
+      - pattern: $PROMPT = await $CLIENT.getPrompt($NAME, ...)
+
+      # MCP connection patterns - HIGH CONFIDENCE
+      - pattern: await $CLIENT.connect($TRANSPORT)
+      - pattern: await $CLIENT.close()
+
+      # MCP low-level request patterns - HIGH CONFIDENCE
+      - pattern: |
+          await $CLIENT.request(
+            { method: "tools/list" },
+            ListToolsResultSchema
+          )
+      - pattern: |
+          await $CLIENT.request(
+            { method: "tools/call" },
+            CallToolResultSchema
+          )
+      - pattern: |
+          await $CLIENT.request(
+            { method: "resources/list" },
+            ListResourcesResultSchema
+          )
+      - pattern: |
+          await $CLIENT.request(
+            { method: "resources/read" },
+            $SCHEMA
+          )
+      - pattern: |
+          await $CLIENT.request(
+            { method: "prompts/list" },
+            $SCHEMA
+          )
+      - pattern: |
+          await $CLIENT.request(
+            { method: "prompts/get" },
+            $SCHEMA
+          )
+
+      # MCP capabilities configuration - MEDIUM CONFIDENCE
+      - pattern: |
+          {
+            capabilities: {
+              prompts: {},
+              resources: {},
+              tools: {}
+            }
+          }
+      - pattern: |
+          capabilities: {
+            prompts: $PROMPTS,
+            resources: $RESOURCES,
+            tools: $TOOLS
+          }
+
+      # MCP-specific class patterns - HIGH CONFIDENCE
+      - pattern: |
+          class $CLASS {
+            private mcp: Client;
+            ...
+          }
+      - pattern: |
+          private mcp: Client
+      - pattern: |
+          public client: Client
+
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/
+        - https://github.com/modelcontextprotocol/typescript-sdk
+        - https://spec.modelcontextprotocol.io/specification/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - MCP
+        - model-context-protocol
+        - client
+        - tools
+        - resources
+        - prompts
+        - typescript
+        - javascript
+      confidence: HIGH
+      subcategory:
+        - mcp-client

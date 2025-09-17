@@ -1,0 +1,87 @@
+rules:
+  - id: detect-vector-haystack
+    languages:
+      - python
+    severity: INFO
+    message: "Detected Haystack vector/retrieval usage: Vector search, similarity search, or RAG implementation patterns"
+    pattern-either:
+      # Document store imports
+      - pattern: from haystack.document_stores import InMemoryDocumentStore
+      - pattern: from haystack.document_stores import $DOCUMENTSTORE
+      - pattern: document_store = InMemoryDocumentStore()
+      - pattern: $STORE = InMemoryDocumentStore(...)
+      # Retriever imports and creation
+      - pattern: from haystack.components.retrievers import InMemoryEmbeddingRetriever
+      - pattern: from haystack.components.retrievers import $RETRIEVER
+      - pattern: retriever = InMemoryEmbeddingRetriever(document_store=$STORE)
+      - pattern: $RETRIEVER = InMemoryEmbeddingRetriever(...)
+      # RAG pipeline creation
+      - pattern: from haystack import Pipeline
+      - pattern: rag_pipeline = Pipeline()
+      - pattern: $PIPELINE = Pipeline()
+      # Pipeline component addition
+      - pattern: $PIPELINE.add_component("retriever", retriever)
+      - pattern: $PIPELINE.add_component("text_embedder", $EMBEDDER)
+      - pattern: $PIPELINE.add_component(..., $COMPONENT)
+      # Pipeline connections for RAG
+      - pattern: $PIPELINE.connect("text_embedder.embedding", "retriever.query_embedding")
+      - pattern: $PIPELINE.connect("retriever", "prompt_builder.documents")
+      - pattern: $PIPELINE.connect("prompt_builder", "generator")
+      - pattern: $PIPELINE.connect($FROM, $TO)
+      # RAG template patterns
+      - pattern: |
+          template = """
+          Given the following information, answer the question.
+
+          Context:
+          {% for document in documents %}
+            {{ document.content }}
+          {% endfor %}
+
+          Question: {{ question }}
+          Answer:
+          """
+      - pattern: from haystack.components.builders import PromptBuilder
+      - pattern: prompt_builder = PromptBuilder(template=$TEMPLATE)
+      # Pipeline execution for RAG
+      - pattern: |
+          result = $PIPELINE.run({
+              "text_embedder": {"text": $QUERY},
+              "prompt_builder": {"question": $QUESTION}
+          })
+      - pattern: "$PIPELINE.run({...})"
+      # Document writing to store
+      - pattern: 'document_store.write_documents($EMBEDDED_DOCS["documents"])'
+      - pattern: $STORE.write_documents(...)
+      # Generator component
+      - pattern: from haystack.components.generators import OpenAIGenerator
+      - pattern: generator = OpenAIGenerator(...)
+      - pattern: $GENERATOR = OpenAIGenerator(...)
+      # Document creation and processing
+      - pattern: from haystack import Document
+      - pattern: documents = [Document(content=$CONTENT), ...]
+      - pattern: Document(content=...)
+      # Embedding and retrieval patterns
+      - pattern: embedded_docs = doc_embedder.run(documents=$DOCS)
+      - pattern: query_embedding=$EMBEDDING
+      - pattern: "retriever.query_embedding"
+      # Search and retrieval execution
+      - pattern: '"text_embedder": {"text": $QUERY}'
+      - pattern: '"prompt_builder": {"question": $QUESTION}'
+      - pattern: result["generator"]["replies"][0]
+    metadata:
+      references:
+        - https://docs.haystack.deepset.ai/docs/retrievers
+        - https://docs.haystack.deepset.ai/docs/rag-pipeline
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - vector-search
+        - retrieval
+        - RAG
+        - similarity-search
+        - document-store
+      confidence: MEDIUM
+      subcategory:
+        - vector

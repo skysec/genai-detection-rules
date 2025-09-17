@@ -1,0 +1,194 @@
+rules:
+  - id: detect-mcp-server-csharp
+    languages:
+      - csharp
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) server implementation: Import patterns, attribute usage, or service registration"
+    pattern-either:
+      # Core MCP server using statements - HIGH CONFIDENCE
+      - pattern: using ModelContextProtocol;
+      - pattern: using ModelContextProtocol.Server;
+      - pattern: using ModelContextProtocol.Protocol;
+      - pattern: using ModelContextProtocol.AspNetCore;
+      - pattern: using ModelContextProtocol.Core;
+      - pattern: using ModelContextProtocol.$SUBMODULE;
+
+      # MCP service registration - HIGH CONFIDENCE
+      - pattern: |
+          $SERVICES.AddMcpServer()
+      - pattern: |
+          $BUILDER.Services.AddMcpServer()
+      - pattern: |
+          $SERVICES.AddMcpServer().WithStdioServerTransport()
+      - pattern: |
+          $SERVICES.AddMcpServer().WithHttpServerTransport()
+      - pattern: |
+          $SERVICES.AddMcpServer().WithToolsFromAssembly()
+      - pattern: |
+          $SERVICES.AddMcpServer().WithPromptsFromAssembly()
+
+      # MCP transport configuration - HIGH CONFIDENCE
+      - pattern: |
+          $CONFIG.WithStdioServerTransport()
+      - pattern: |
+          $CONFIG.WithHttpServerTransport()
+      - pattern: |
+          $CONFIG.WithToolsFromAssembly()
+      - pattern: |
+          $CONFIG.WithPromptsFromAssembly()
+
+      # MCP server tool attributes - HIGH CONFIDENCE
+      - pattern: |
+          [McpServerToolType]
+          class $CLASS
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerToolType]
+          public class $CLASS
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerToolType]
+          public static class $CLASS
+          {
+            ...
+          }
+
+      # MCP tool method attributes - HIGH CONFIDENCE
+      - pattern: |
+          [McpServerTool]
+          public static $RETURN $METHOD(...)
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerTool]
+          public static async $RETURN $METHOD(...)
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerTool]
+          $RETURN $METHOD(...)
+          {
+            ...
+          }
+
+      # MCP prompt attributes - HIGH CONFIDENCE
+      - pattern: |
+          [McpServerPromptType]
+          class $CLASS
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerPromptType]
+          public static class $CLASS
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerPrompt]
+          public static $RETURN $METHOD(...)
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerPrompt]
+          public static async $RETURN $METHOD(...)
+          {
+            ...
+          }
+
+      # MCP resource attributes - HIGH CONFIDENCE
+      - pattern: |
+          [McpServerResourceType]
+          class $CLASS
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerResourceType]
+          public static class $CLASS
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerResource]
+          public static $RETURN $METHOD(...)
+          {
+            ...
+          }
+      - pattern: |
+          [McpServerResource]
+          public static async $RETURN $METHOD(...)
+          {
+            ...
+          }
+
+      # MCP ASP.NET Core integration - HIGH CONFIDENCE
+      - pattern: |
+          $APP.MapMcp()
+      - pattern: |
+          app.MapMcp()
+
+      # MCP host builder patterns - HIGH CONFIDENCE
+      - pattern: |
+          Host.CreateApplicationBuilder($ARGS)
+      - pattern: |
+          Host.CreateEmptyApplicationBuilder($SETTINGS)
+
+      # MCP ChatMessage usage - MEDIUM CONFIDENCE
+      - pattern: |
+          new ChatMessage(ChatRole.$ROLE, $MESSAGE)
+      - pattern: |
+          new ChatMessage($ROLE, $MESSAGE)
+      - pattern: |
+          ChatMessage($ROLE, $MESSAGE)
+
+      # MCP base class inheritance - HIGH CONFIDENCE
+      - pattern: |
+          class $CLASS : McpServerTool
+          {
+            ...
+          }
+      - pattern: |
+          class $CLASS : McpServerPrompt
+          {
+            ...
+          }
+      - pattern: |
+          class $CLASS : McpServerResource
+          {
+            ...
+          }
+
+      # MCP static factory methods - HIGH CONFIDENCE
+      - pattern: McpServerPrompt.Create(...)
+      - pattern: McpServerResource.Create(...)
+      - pattern: McpServerTool.Create(...)
+
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/
+        - https://github.com/modelcontextprotocol/dotnet-sdk
+        - https://github.com/modelcontextprotocol/servers
+        - https://spec.modelcontextprotocol.io/specification/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - MCP
+        - model-context-protocol
+        - server
+        - tools
+        - resources
+        - prompts
+        - dotnet
+        - csharp
+      confidence: HIGH
+      subcategory:
+        - mcp-server

@@ -1,0 +1,58 @@
+rules:
+  - id: detect-memory-llamaindex
+    languages:
+      - python
+    severity: INFO
+    message: "Detected LlamaIndex memory usage: Chat memory, conversation history, or context retention patterns"
+    pattern-either:
+      # Memory imports
+      - pattern: from llama_index.core.memory import ChatMemoryBuffer
+      - pattern: from llama_index.core.memory import $MEMORY
+      - pattern: from llama_index.memory import $MEMORY_TYPE
+      # Memory instantiation
+      - pattern: $MEMORY = ChatMemoryBuffer.from_defaults(...)
+      - pattern: memory = ChatMemoryBuffer.from_defaults(token_limit=$LIMIT)
+      - pattern: ChatMemoryBuffer.from_defaults(...)
+      # Chat engine with memory
+      - pattern: |
+          $ENGINE = $INDEX.as_chat_engine(
+              chat_mode=$MODE,
+              memory=$MEMORY,
+              ...
+          )
+      - pattern: $INDEX.as_chat_engine(..., memory=$MEMORY, ...)
+      - pattern: chat_mode="context"
+      - pattern: memory=$MEMORY_VAR
+      # Chat interactions
+      - pattern: $ENGINE.chat($MESSAGE)
+      - pattern: $CHAT_ENGINE.chat(...)
+      # Memory configuration
+      - pattern: token_limit=$LIMIT
+      - pattern: system_prompt=$PROMPT
+      # Memory buffer patterns
+      - pattern: from_defaults(token_limit=$LIMIT)
+      - pattern: from_defaults(..., token_limit=..., ...)
+      # Chat context patterns
+      - pattern: chat_history=[$MESSAGES]
+      - pattern: "chatHistory: $HISTORY"
+      # Memory reset/clear
+      - pattern: $MEMORY.reset()
+      - pattern: $MEMORY.clear()
+      # Memory state access
+      - pattern: $MEMORY.get_all()
+      - pattern: $MEMORY.get($KEY)
+      - pattern: $MEMORY.put($KEY, $VALUE)
+    metadata:
+      references:
+        - https://docs.llamaindex.ai/en/stable/module_guides/deploying/chat_engines/
+        - https://docs.llamaindex.ai/en/stable/examples/memory/
+      category: maintainability
+      technology:
+        - genAI
+        - LLMs
+        - memory
+        - conversation
+        - chat-history
+      confidence: MEDIUM
+      subcategory:
+        - memory
