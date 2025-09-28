@@ -23,11 +23,12 @@ rules:
       - pattern: $PIPELINE.add_component("retriever", retriever)
       - pattern: $PIPELINE.add_component("text_embedder", $EMBEDDER)
       - pattern: $PIPELINE.add_component(..., $COMPONENT)
-      # Pipeline connections for RAG
+      # Pipeline connections for RAG - HIGH CONFIDENCE (specific to Haystack RAG)
       - pattern: $PIPELINE.connect("text_embedder.embedding", "retriever.query_embedding")
       - pattern: $PIPELINE.connect("retriever", "prompt_builder.documents")
       - pattern: $PIPELINE.connect("prompt_builder", "generator")
-      - pattern: $PIPELINE.connect($FROM, $TO)
+      - pattern: $PIPELINE.connect("text_embedder", "retriever")
+      - pattern: $PIPELINE.connect("retriever.documents", $TARGET)
       # RAG template patterns
       - pattern: |
           template = """
@@ -61,14 +62,11 @@ rules:
       - pattern: from haystack import Document
       - pattern: documents = [Document(content=$CONTENT), ...]
       - pattern: Document(content=...)
-      # Embedding and retrieval patterns
+      # Embedding and retrieval patterns - HIGH CONFIDENCE
       - pattern: embedded_docs = doc_embedder.run(documents=$DOCS)
-      - pattern: query_embedding=$EMBEDDING
-      - pattern: "retriever.query_embedding"
-      # Search and retrieval execution
-      - pattern: '"text_embedder": {"text": $QUERY}'
-      - pattern: '"prompt_builder": {"question": $QUESTION}'
+      - pattern: $EMBEDDER.run(documents=$DOCS)
       - pattern: result["generator"]["replies"][0]
+      - pattern: result["retriever"]["documents"]
     metadata:
       references:
         - https://docs.haystack.deepset.ai/docs/retrievers
@@ -82,6 +80,6 @@ rules:
         - RAG
         - similarity-search
         - document-store
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - vector

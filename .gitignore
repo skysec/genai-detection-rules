@@ -257,5 +257,5 @@ checkpoints/
 
 #samples/
 .claude/
-samples/
-context/
+samples*
+context*

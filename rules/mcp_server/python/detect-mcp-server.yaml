@@ -96,12 +96,34 @@ rules:
       # MCP Context import and usage - MEDIUM CONFIDENCE
       - pattern: from mcp.server.fastmcp import Context
       - pattern: from mcp import Context
-      - pattern: |
-          def $FUNC(..., context: Context, ...):
-            ...
-      - pattern: |
-          async def $FUNC(..., context: Context, ...):
-            ...
+      - patterns:
+          - pattern-inside: |
+              from mcp import Context
+              ...
+          - pattern: |
+              def $FUNC(..., context: Context, ...):
+                ...
+      - patterns:
+          - pattern-inside: |
+              from mcp.server.fastmcp import Context
+              ...
+          - pattern: |
+              def $FUNC(..., context: Context, ...):
+                ...
+      - patterns:
+          - pattern-inside: |
+              from mcp import Context
+              ...
+          - pattern: |
+              async def $FUNC(..., context: Context, ...):
+                ...
+      - patterns:
+          - pattern-inside: |
+              from mcp.server.fastmcp import Context
+              ...
+          - pattern: |
+              async def $FUNC(..., context: Context, ...):
+                ...
 
     metadata:
       references:

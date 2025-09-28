@@ -5,11 +5,13 @@ rules:
     severity: INFO
     message: "Detected LangChain vector/retrieval usage: Vector search, similarity search, or RAG implementation patterns"
     pattern-either:
-      # Vector store imports
+      # Modern vector store imports - VERY HIGH CONFIDENCE
       - pattern: from langchain_chroma import Chroma
-      - pattern: from langchain_pinecone import Pinecone
-      - pattern: from langchain_weaviate import Weaviate
-      - pattern: from langchain_faiss import FAISS
+      - pattern: from langchain_pinecone import PineconeVectorStore
+      - pattern: from langchain_weaviate import WeaviateVectorStore
+      - pattern: from langchain_community.vectorstores import FAISS
+      - pattern: from langchain_community.vectorstores import Chroma
+      - pattern: from langchain_community.vectorstores import $VECTORSTORE
       - pattern: from langchain.vectorstores import $VECTORSTORE
       # Vector store creation
       - pattern: vectorstore = Chroma.from_documents($DOCS, $EMBEDDINGS)
@@ -26,16 +28,15 @@ rules:
       - pattern: '$STORE.as_retriever(search_kwargs={"k": $K})'
       - pattern: retriever = vectorstore.as_retriever(...)
       - pattern: 'search_kwargs={"k": $K}'
-      # RAG chain imports and creation
+      # Modern RAG chain imports and creation - HIGH CONFIDENCE
       - pattern: from langchain.chains import RetrievalQA
       - pattern: from langchain.chains.retrieval_qa import RetrievalQA
+      - pattern: from langchain.chains import create_retrieval_chain
+      - pattern: from langchain.chains.combine_documents import create_stuff_documents_chain
       - pattern: qa = RetrievalQA.from_chain_type(...)
-      - pattern: |
-          $QA = RetrievalQA.from_chain_type(
-              llm=$LLM,
-              chain_type=$TYPE,
-              retriever=$RETRIEVER
-          )
+      - pattern: $QA = RetrievalQA.from_chain_type(llm=$LLM, chain_type=$TYPE, retriever=$RETRIEVER)
+      - pattern: create_retrieval_chain($RETRIEVER, $CHAIN)
+      - pattern: create_stuff_documents_chain($LLM, $PROMPT)
       # RAG execution
       - pattern: $QA.run($QUESTION)
       - pattern: qa.run(...)
@@ -54,12 +55,12 @@ rules:
       - pattern: vectorstore.persist()
       - pattern: $STORE.save_local($PATH)
       - pattern: Chroma.from_documents(..., persist_directory=$DIR)
-      # Advanced retrieval patterns
+      # Advanced retrieval patterns - MEDIUM CONFIDENCE (remove generic string patterns)
       - pattern: retriever=vectorstore.as_retriever(...)
-      - pattern: chain_type="stuff"
-      - pattern: chain_type="map_reduce"
-      - pattern: search_type="similarity"
-      - pattern: search_type="mmr"
+      - pattern: $STORE.as_retriever(search_type="similarity")
+      - pattern: $STORE.as_retriever(search_type="mmr")
+      - pattern: RetrievalQA.from_chain_type(..., chain_type="stuff")
+      - pattern: RetrievalQA.from_chain_type(..., chain_type="map_reduce")
     metadata:
       references:
         - https://python.langchain.com/docs/modules/data_connection/vectorstores/
@@ -72,6 +73,6 @@ rules:
         - retrieval
         - RAG
         - similarity-search
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - vector

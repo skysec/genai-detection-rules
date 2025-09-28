@@ -34,47 +34,21 @@ rules:
       - pattern: import { MultiServerManager } from "@modelcontextprotocol/sdk/client"
 
       # STDIO transport instantiation - VERY HIGH CONFIDENCE
-      - pattern: |
-          new StdioClientTransport({
-            command: $COMMAND,
-            args: $ARGS
-          })
-      - pattern: |
-          $TRANSPORT = new StdioClientTransport({
-            ...
-          })
+      - pattern: new StdioClientTransport($ARGS)
+      - pattern: $VAR = new StdioClientTransport($ARGS)
       - pattern: new StdioClientTransport(...)
 
       # SSE transport instantiation - VERY HIGH CONFIDENCE
       - pattern: new SSEClientTransport($URL)
-      - pattern: |
-          $TRANSPORT = new SSEClientTransport(...)
+      - pattern: $TRANSPORT = new SSEClientTransport($URL)
 
       # HTTP transport instantiation - HIGH CONFIDENCE
-      - pattern: |
-          new HttpClientTransport({
-            url: $URL
-          })
-      - pattern: |
-          $TRANSPORT = new HttpClientTransport({
-            ...
-          })
+      - pattern: new HttpClientTransport($ARGS)
+      - pattern: $VAR = new HttpClientTransport($ARGS)
 
       # MCP client instantiation - HIGH CONFIDENCE
-      - pattern: |
-          new Client({
-            name: $NAME,
-            version: $VERSION
-          })
-      - pattern: |
-          new Client(
-            { name: $NAME, version: $VERSION },
-            { capabilities: $CAPABILITIES }
-          )
-      - pattern: |
-          $CLIENT = new Client({
-            ...
-          })
+      - pattern: new Client($ARGS)
+      - pattern: $VAR = new Client($ARGS)
 
       # MCP-specific method calls - VERY HIGH CONFIDENCE (unique to MCP)
       - pattern: await $CLIENT.listTools()
@@ -92,49 +66,12 @@ rules:
 
       # MCP connection patterns - HIGH CONFIDENCE
       - pattern: await $CLIENT.connect($TRANSPORT)
-      - pattern: await $CLIENT.close()
 
       # MCP low-level request patterns - HIGH CONFIDENCE
-      - pattern: |
-          await $CLIENT.request(
-            { method: "tools/list" },
-            ListToolsResultSchema
-          )
-      - pattern: |
-          await $CLIENT.request(
-            { method: "tools/call" },
-            CallToolResultSchema
-          )
-      - pattern: |
-          await $CLIENT.request(
-            { method: "resources/list" },
-            ListResourcesResultSchema
-          )
-      - pattern: |
-          await $CLIENT.request(
-            { method: "resources/read" },
-            $SCHEMA
-          )
-      - pattern: |
-          await $CLIENT.request(
-            { method: "prompts/list" },
-            $SCHEMA
-          )
-      - pattern: |
-          await $CLIENT.request(
-            { method: "prompts/get" },
-            $SCHEMA
-          )
+      - pattern: await $CLIENT.request($METHOD, $SCHEMA)
+      - pattern: $RESULT = await $CLIENT.request($METHOD, $SCHEMA)
 
       # MCP capabilities configuration - MEDIUM CONFIDENCE
-      - pattern: |
-          {
-            capabilities: {
-              prompts: {},
-              resources: {},
-              tools: {}
-            }
-          }
       - pattern: |
           capabilities: {
             prompts: $PROMPTS,
@@ -142,16 +79,11 @@ rules:
             tools: $TOOLS
           }
 
-      # MCP-specific class patterns - HIGH CONFIDENCE
-      - pattern: |
-          class $CLASS {
-            private mcp: Client;
-            ...
-          }
-      - pattern: |
-          private mcp: Client
-      - pattern: |
-          public client: Client
+      # MCP-specific instantiation patterns - HIGH CONFIDENCE
+      - pattern: $VAR = new Client($ARGS)
+      - pattern: $VAR = new StdioClientTransport($ARGS)
+      - pattern: $VAR = new SSEClientTransport($ARGS)
+      - pattern: $VAR = new HttpClientTransport($ARGS)
 
     metadata:
       references:

@@ -3,100 +3,77 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Detected Hugging Face vector/retrieval usage: Vector search, similarity search, or custom vector database patterns"
+    message: "Detected HuggingFace vector/embedding usage: SentenceTransformers, Transformers embeddings, or HuggingFace vector search patterns"
     pattern-either:
-      # Custom vector database implementation
-      - pattern: |
-          class SimpleVectorDB:
-              def __init__(self, embedding_model):
-                  self.embedding_model = embedding_model
-                  self.documents = []
-                  self.embeddings = None
-              ...
-      - pattern: |
-          class $CLASS:
-              def __init__(self):
-                  self.documents = []
-                  self.embeddings = []
-              ...
-      # Vector database methods
-      - pattern: |
-          def add_documents(self, docs):
-              self.documents.extend(docs)
-              new_embeddings = self.embedding_model.encode(docs)
-              ...
-      - pattern: |
-          def search(self, query, top_k=$K):
-              query_embedding = self.embedding_model.encode([$QUERY])
-              similarities = cosine_similarity(query_embedding, self.embeddings)
-              ...
-      # Similarity computation
-      - pattern: from sklearn.metrics.pairwise import cosine_similarity
-      - pattern: similarities = cosine_similarity($QUERY_EMB, self.embeddings)
-      - pattern: cosine_similarity($A, $B)
-      # Vector storage patterns
-      - pattern: self.embeddings = new_embeddings
-      - pattern: self.embeddings = np.vstack([self.embeddings, new_embeddings])
-      - pattern: if self.embeddings is None
-      # Search result ranking
-      - pattern: top_indices = np.argsort($SIMILARITIES)[::-1][:$TOP_K]
-      - pattern: np.argsort($SIMILARITIES)[::-1]
-      - pattern: best_match_idx = np.argmax($SIMILARITIES)
-      # Search result formatting
-      - pattern: |
-          results = []
-          for idx in top_indices:
-              results.append({
-                  'document': self.documents[idx],
-                  'score': similarities[idx]
-              })
-      - pattern: "{'document': $DOC, 'score': $SCORE}"
-      # Vector database usage
-      - pattern: vector_db = SimpleVectorDB($EMBEDDING_MODEL)
-      - pattern: vector_db.add_documents($DOCS)
-      - pattern: results = vector_db.search($QUERY)
-      - pattern: $VDB.search(..., top_k=$K)
-      # Semantic search implementation
-      - pattern: |
-          def semantic_search(self, query: str, documents: list, top_k: int = $K) -> list:
-              doc_embeddings = self.embeddings.encode(documents)
-              query_embedding = self.embeddings.encode([$QUERY])
-              ...
-      # Vector search in toolkit
-      - pattern: |
-          class HuggingFaceToolkit:
-              ...
-              def semantic_search(self, $ARGS) -> list:
-                  ...
-      # Memory with vector search
-      - pattern: |
-          def get_relevant_context(self, current_input: str, top_k: int = $K) -> str:
-              ...
-              current_embedding = self.embeddings_model.encode([$INPUT])
-              historical_embeddings = self.embeddings_model.encode($TEXTS)
-              similarities = cosine_similarity(current_embedding, historical_embeddings)[0]
-              ...
-      # Embedding-based context retrieval
-      - pattern: current_embedding = self.embeddings_model.encode([$INPUT])
-      - pattern: historical_embeddings = self.embeddings_model.encode($TEXTS)
-      - pattern: similarities = cosine_similarity($CURRENT, $HISTORICAL)[0]
-      # Vector operations
-      - pattern: np.vstack([$ARR1, $ARR2])
-      - pattern: similarities[idx]
-      - pattern: float(similarities[idx])
+      # Core SentenceTransformers imports - VERY HIGH CONFIDENCE
+      - pattern: from sentence_transformers import SentenceTransformer
+      - pattern: from sentence_transformers import SentenceTransformer, $REST
+      - pattern: import sentence_transformers
+      - pattern: from sentence_transformers import util
+      - pattern: from sentence_transformers.util import semantic_search
+      - pattern: from sentence_transformers.util import cos_sim
+
+      # HuggingFace Transformers embedding patterns - HIGH CONFIDENCE
+      - pattern: from transformers import AutoTokenizer, AutoModel
+      - pattern: from transformers import AutoModel
+      - pattern: AutoModel.from_pretrained($MODEL)
+      - pattern: AutoTokenizer.from_pretrained($MODEL)
+
+      # SentenceTransformer instantiation - VERY HIGH CONFIDENCE
+      - pattern: SentenceTransformer($MODEL)
+      - pattern: $MODEL = SentenceTransformer($MODEL_NAME)
+      - pattern: model = SentenceTransformer(...)
+
+      # Embedding generation - HIGH CONFIDENCE
+      - pattern: $MODEL.encode($TEXTS)
+      - pattern: $EMBEDDINGS = $MODEL.encode($TEXTS)
+      - pattern: embeddings = model.encode(...)
+
+      # HuggingFace specific vector operations - VERY HIGH CONFIDENCE
+      - pattern: semantic_search($QUERY_EMB, $CORPUS_EMB)
+      - pattern: util.semantic_search($QUERY_EMB, $CORPUS_EMB)
+      - pattern: sentence_transformers.util.semantic_search($QUERY_EMB, $CORPUS_EMB)
+      - pattern: cos_sim($EMB1, $EMB2)
+      - pattern: util.cos_sim($EMB1, $EMB2)
+
+      # Popular HuggingFace embedding models - HIGH CONFIDENCE
+      - pattern: SentenceTransformer("all-MiniLM-L6-v2")
+      - pattern: SentenceTransformer("all-mpnet-base-v2")
+      - pattern: SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
+      - pattern: SentenceTransformer("paraphrase-MiniLM-L6-v2")
+      - pattern: SentenceTransformer("sentence-transformers/$MODEL")
+
+      # HuggingFace Hub model loading - HIGH CONFIDENCE
+      - pattern: SentenceTransformer.from_pretrained($MODEL)
+      - pattern: model.save_pretrained($PATH)
+
+      # Sentence-transformers specific operations - HIGH CONFIDENCE
+      - pattern: model.similarity($TEXTS1, $TEXTS2)
+      - pattern: $MODEL.encode($TEXTS, convert_to_tensor=$BOOL)
+      - pattern: $MODEL.encode($TEXTS, show_progress_bar=$BOOL)
+
+      # Cross-encoder patterns (HuggingFace) - HIGH CONFIDENCE
+      - pattern: from sentence_transformers import CrossEncoder
+      - pattern: CrossEncoder($MODEL)
+      - pattern: $CROSS_ENCODER.predict($PAIRS)
+
+      # HuggingFace embedding evaluation - MEDIUM CONFIDENCE
+      - pattern: from sentence_transformers.evaluation import $EVAL
+      - pattern: $MODEL.evaluate($EVALUATOR)
+
     metadata:
       references:
-        - https://www.sbert.net/examples/applications/semantic-search/README.html
+        - https://www.sbert.net/
         - https://huggingface.co/sentence-transformers
+        - https://huggingface.co/docs/transformers/main_classes/model
       category: maintainability
       technology:
         - genAI
-        - LLMs
+        - embeddings
         - vector-search
-        - retrieval
-        - similarity-search
         - sentence-transformers
         - huggingface
-      confidence: MEDIUM
+        - transformers
+      confidence: HIGH
       subcategory:
         - vector

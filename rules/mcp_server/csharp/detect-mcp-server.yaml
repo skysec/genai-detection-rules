@@ -135,11 +135,25 @@ rules:
       - pattern: |
           app.MapMcp()
 
-      # MCP host builder patterns - HIGH CONFIDENCE
-      - pattern: |
-          Host.CreateApplicationBuilder($ARGS)
-      - pattern: |
-          Host.CreateEmptyApplicationBuilder($SETTINGS)
+      # MCP host builder patterns - constrained to MCP context
+      - patterns:
+          - pattern-inside: |
+              using ModelContextProtocol;
+              ...
+          - pattern: |
+              Host.CreateApplicationBuilder($ARGS)
+      - patterns:
+          - pattern-inside: |
+              using ModelContextProtocol.Server;
+              ...
+          - pattern: |
+              Host.CreateApplicationBuilder($ARGS)
+      - patterns:
+          - pattern-inside: |
+              using ModelContextProtocol.AspNetCore;
+              ...
+          - pattern: |
+              Host.CreateApplicationBuilder($ARGS)
 
       # MCP ChatMessage usage - MEDIUM CONFIDENCE
       - pattern: |

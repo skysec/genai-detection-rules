@@ -75,33 +75,58 @@ rules:
             ...
           })
 
-      # Tool definition patterns - HIGH CONFIDENCE
-      - pattern: |
-          {
-            name: $TOOL_NAME,
-            description: $DESCRIPTION,
-            inputSchema: {
-              type: "object",
-              properties: $PROPERTIES
-            }
-          }
+      # Tool definition patterns - HIGH CONFIDENCE (constrained to MCP context)
+      - patterns:
+          - pattern-inside: |
+              import { $IMPORT } from "@modelcontextprotocol/sdk/server"
+              ...
+          - pattern: |
+              {
+                name: $TOOL_NAME,
+                description: $DESCRIPTION,
+                inputSchema: {
+                  type: "object",
+                  properties: $PROPERTIES
+                }
+              }
+      - patterns:
+          - pattern-inside: |
+              import { $IMPORT } from "@modelcontextprotocol/sdk/types"
+              ...
+          - pattern: |
+              {
+                name: $TOOL_NAME,
+                description: $DESCRIPTION,
+                inputSchema: {
+                  type: "object",
+                  properties: $PROPERTIES
+                }
+              }
 
-      # Resource definition patterns - HIGH CONFIDENCE
-      - pattern: |
-          {
-            uri: $URI,
-            name: $NAME,
-            description: $DESCRIPTION,
-            mimeType: $MIME_TYPE
-          }
+      # Resource definition patterns - HIGH CONFIDENCE (constrained to MCP context)
+      - patterns:
+          - pattern-inside: |
+              import { $IMPORT } from "@modelcontextprotocol/sdk/server"
+              ...
+          - pattern: |
+              {
+                uri: $URI,
+                name: $NAME,
+                description: $DESCRIPTION,
+                mimeType: $MIME_TYPE
+              }
 
-      # Prompt definition patterns - HIGH CONFIDENCE
-      - pattern: |
-          {
-            name: $PROMPT_NAME,
-            description: $DESCRIPTION,
-            arguments: $ARGUMENTS
-          }
+      # Prompt definition patterns - HIGH CONFIDENCE (constrained to MCP context)
+      - patterns:
+          - pattern-inside: |
+              import { $IMPORT } from "@modelcontextprotocol/sdk/server"
+              ...
+          - pattern: |
+              {
+                name: $PROMPT_NAME,
+                description: $DESCRIPTION,
+                arguments: $ARGUMENTS
+              }
 
       # MCP error handling patterns - MEDIUM CONFIDENCE
       - pattern: |

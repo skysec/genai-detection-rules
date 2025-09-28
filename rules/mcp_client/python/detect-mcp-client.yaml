@@ -56,6 +56,6 @@ rules:
         - client
         - tools
         - resources
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - mcp-client

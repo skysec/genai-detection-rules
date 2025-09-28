@@ -48,8 +48,26 @@ rules:
           server.NewMCPServer($NAME, $VERSION, ...)
       - pattern: |
           $SERVER := server.NewMCPServer($NAME, $VERSION, ...)
-      - pattern: mcp.NewServer(...)
-      - pattern: server.NewMCPServer(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/modelcontextprotocol/go-sdk/mcp"
+              ...
+          - pattern: mcp.NewServer(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/mark3labs/mcp-go/mcp"
+              ...
+          - pattern: mcp.NewServer(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/mark3labs/mcp-go/server"
+              ...
+          - pattern: server.NewMCPServer(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/MegaGrindStone/go-mcp/mcp"
+              ...
+          - pattern: mcp.NewServer(...)
 
       # MCP tool registration patterns - HIGH CONFIDENCE
       - pattern: |
@@ -60,8 +78,36 @@ rules:
           $TOOL := mcp.NewTool($NAME, ...)
       - pattern: |
           $SERVER.AddTool($TOOL, ...)
-      - pattern: mcp.NewTool(...)
-      - pattern: mcp.AddTool(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/modelcontextprotocol/go-sdk/mcp"
+              ...
+          - pattern: mcp.NewTool(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/mark3labs/mcp-go/mcp"
+              ...
+          - pattern: mcp.NewTool(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/MegaGrindStone/go-mcp/mcp"
+              ...
+          - pattern: mcp.NewTool(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/modelcontextprotocol/go-sdk/mcp"
+              ...
+          - pattern: mcp.AddTool(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/mark3labs/mcp-go/mcp"
+              ...
+          - pattern: mcp.AddTool(...)
+      - patterns:
+          - pattern-inside: |
+              import "github.com/MegaGrindStone/go-mcp/mcp"
+              ...
+          - pattern: mcp.AddTool(...)
 
       # MCP tool handler function signatures - HIGH CONFIDENCE
       - pattern: |

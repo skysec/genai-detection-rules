@@ -33,7 +33,6 @@ rules:
       - pattern: from llama_index.core.retrievers import BaseRetriever
       - pattern: retriever = index.as_retriever(similarity_top_k=$K)
       - pattern: $RETRIEVER = $INDEX.as_retriever(...)
-      - pattern: similarity_top_k=$K
       # Custom retriever implementation
       - pattern: |
           class CustomRetriever(BaseRetriever):
@@ -56,13 +55,13 @@ rules:
       - pattern: from llama_index.core.query_engine import RetrieverQueryEngine
       - pattern: query_engine = RetrieverQueryEngine.from_args($RETRIEVER)
       - pattern: RetrieverQueryEngine.from_args(...)
-      # Vector search patterns
+      # Vector search patterns - HIGH CONFIDENCE
       - pattern: node.score > $THRESHOLD
       - pattern: filtered_nodes = [node for node in nodes if node.score > $THRESHOLD]
-      # External vector database integration
-      - pattern: import chromadb
-      - pattern: chroma_client = chromadb.EphemeralClient()
-      - pattern: chroma_collection = chroma_client.create_collection($NAME)
+      # External vector database integration with LlamaIndex - HIGH CONFIDENCE
+      - pattern: ChromaVectorStore(chroma_collection=$COLLECTION)
+      - pattern: PineconeVectorStore($ARGS)
+      - pattern: WeaviateVectorStore($ARGS)
     metadata:
       references:
         - https://docs.llamaindex.ai/en/stable/module_guides/storing/vector_stores/
@@ -75,6 +74,6 @@ rules:
         - retrieval
         - RAG
         - similarity-search
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - vector
