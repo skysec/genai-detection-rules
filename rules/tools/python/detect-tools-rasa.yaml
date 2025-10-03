@@ -22,34 +22,20 @@ rules:
                   tracker: Tracker,
                   domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
               ...
-      # Tool class definitions in Rasa
-      - pattern: |
-          class $CLASS(Tool):
-              def run(self, $ARGS) -> str:
-                  """$DOCSTRING"""
-                  ...
-      # Pipeline components
-      - pattern: from haystack.components.tools import Tool
-      - pattern: $PIPELINE.add_component($NAME, $TOOL)
-      # Custom NLU components
+      # Rasa action method patterns - VERY HIGH CONFIDENCE
+      - pattern: dispatcher.utter_message(text=$MSG)
+      - pattern: tracker.get_slot($SLOT)
+      - pattern: SlotSet($SLOT, $VALUE)
+
+      # Custom NLU components - HIGH CONFIDENCE
       - pattern: from rasa.nlu.components.dense_featurizer import DenseFeaturizer
       - pattern: from rasa.nlu.featurizers._sklearn_featurizer import SklearnFeaturizer
-      # Component registration
+
+      # Component registration - HIGH CONFIDENCE
       - pattern: |
           @DefaultV1Recipe.register(...)
           class $CLASS($PARENT):
               ...
-      # Action method patterns
-      - pattern: dispatcher.utter_message(text=$MSG)
-      - pattern: tracker.get_slot($SLOT)
-      - pattern: SlotSet($SLOT, $VALUE)
-      # External API calls in actions
-      - pattern: requests.get($URL)
-      - pattern: requests.post($URL, ...)
-      # Tool integration patterns
-      - pattern: $TOOL.run($INPUT)
-      - pattern: weather_tool = $CLASS()
-      - pattern: chat_pipeline.add_component($NAME, $TOOL)
     metadata:
       references:
         - https://rasa.com/docs/rasa/custom-actions/
@@ -62,6 +48,6 @@ rules:
         - rasa
         - nlp
         - chatbot
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - tools

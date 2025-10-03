@@ -21,28 +21,28 @@ rules:
       - pattern: initialize_agent(tools=$TOOLS, ...)
       - pattern: initialize_agent(..., tools=$TOOLS, ...)
       - pattern: $AGENT = initialize_agent(...)
-      # Agent execution patterns
-      - pattern: $AGENT.run($QUERY)
-      - pattern: $AGENT.invoke($QUERY)
-      - pattern: $AGENT($QUERY)
-      # Tool method implementations
+      # Tool method implementations - VERY HIGH CONFIDENCE
       - pattern: |
-          def _run(self, $ARGS) -> str:
-              ...
+          class $CLASS(BaseTool):
+              def _run(self, $ARGS) -> str:
+                  ...
       - pattern: |
-          async def _arun(self, $ARGS) -> str:
-              ...
-      # Tool registration and function calling patterns
-      - pattern: $VAR.register_function($FUNC)
-      - pattern: $OBJ.register_function(...)
-      - pattern: $AGENT.tools.append($TOOL)
-      - pattern: $AGENT.add_tool($TOOL)
-      # ConversationChain with tools
-      - pattern: from langchain.chains import ConversationChain
-      - pattern: $CHAIN = ConversationChain(...)
-      # Function calling patterns
-      - pattern: $VAR.call_function($FUNC)
-      - pattern: $OBJ.call_function(...)
+          class $CLASS(BaseTool):
+              async def _arun(self, $ARGS) -> str:
+                  ...
+
+      # LangChain specific tool patterns - HIGH CONFIDENCE
+      - pattern: tools=[$TOOLS]
+      - pattern: |
+          $AGENT = initialize_agent(
+              tools=$TOOLS,
+              llm=$LLM
+          )
+      # Tool usage in initialized agents only
+      - pattern: |
+          $AGENT = initialize_agent(...)
+          ...
+          $AGENT.tools.append($TOOL)
     metadata:
       references:
         - https://python.langchain.com/docs/how_to/custom_tools
@@ -53,6 +53,6 @@ rules:
         - LLMs
         - tools
         - function-calling
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - tools

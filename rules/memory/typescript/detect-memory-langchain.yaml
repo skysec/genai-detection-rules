@@ -27,40 +27,19 @@ rules:
       - pattern: |
           const $CHAIN = new ConversationChain({
               llm: $LLM,
-              memory: $MEMORY,
-              ...
+              memory: $MEMORY
           })
-      - pattern: |
-          new ConversationChain({
-              ...
-              memory: $MEMORY,
-              ...
-          })
-      # Memory usage patterns
-      - pattern: '$CHAIN.call({ input: $INPUT })'
-      - pattern: '$CHAIN.predict({ input: $INPUT })'
-      - pattern: await $CHAIN.call(...)
-      - pattern: "memory: $MEMORY_VAR"
-      # Memory method calls
+      - pattern: "new ConversationChain({ memory: $MEMORY })"
+      # Memory-specific method calls - VERY HIGH CONFIDENCE
       - pattern: $MEMORY.saveContext($INPUTS, $OUTPUTS)
-      - pattern: "$MEMORY.loadMemoryVariables({})"
-      - pattern: $MEMORY.clear()
-      - pattern: await $MEMORY.saveContext(...)
-      - pattern: await $MEMORY.loadMemoryVariables(...)
-      # Chat message history
+      - pattern: $MEMORY.loadMemoryVariables($DICT)
+      - pattern: await $MEMORY.saveContext($INPUTS, $OUTPUTS)
+      - pattern: await $MEMORY.loadMemoryVariables($DICT)
+
+      # Chat message history imports - HIGH CONFIDENCE
       - pattern: import { ChatMessageHistory } from "langchain/memory"
       - pattern: import { $HISTORY } from "langchain/stores/message"
-      - pattern: |
-          const messageHistory = new ChatMessageHistory($MESSAGES)
-      - pattern: "chatHistory: $HISTORY"
-      - pattern: "messageHistory: $HISTORY"
-      # Memory configuration options
-      - pattern: "returnMessages: true"
-      - pattern: "memoryKey: $KEY"
-      - pattern: "inputKey: $KEY"
-      - pattern: "outputKey: $KEY"
-      - pattern: "humanPrefix: $PREFIX"
-      - pattern: "aiPrefix: $PREFIX"
+      - pattern: const messageHistory = new ChatMessageHistory($MESSAGES)
       # External storage for memory
       - pattern: import { RedisChatMessageHistory } from "@langchain/redis"
       - pattern: import { $STORAGE } from "@langchain/community/stores"
@@ -77,6 +56,6 @@ rules:
         - chat-history
         - typescript
         - javascript
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - memory

@@ -24,10 +24,8 @@ rules:
               ...
           }
       # Kernel initialization
-      - pattern: var kernel = Kernel.CreateBuilder()
       - pattern: Kernel.CreateBuilder()
-      - pattern: IKernel $VAR = new Kernel()
-      - pattern: var $KERNEL = new Kernel()
+      - pattern: new Kernel()
       # Plugin imports and additions
       - pattern: kernel.ImportPluginFromType<$TYPE>()
       - pattern: $KERNEL.ImportPluginFromType<$TYPE>($NAME)
@@ -58,7 +56,6 @@ rules:
       - pattern: $KERNEL.CreateFunctionFromPrompt(...)
       # Function calling with arguments
       - pattern: new KernelArguments()
-      - pattern: var arguments = new KernelArguments()
       - pattern: $ARGS.Add($KEY, $VALUE)
     metadata:
       references:

@@ -18,40 +18,27 @@ rules:
       - pattern: $EMBEDDINGS = OpenAIEmbedding()
       - pattern: embed_model = OpenAIEmbedding(...)
       - pattern: $VAR = HuggingFaceEmbedding(...)
-      # Vector index creation (implies embeddings)
+      # Explicit embedding model usage - VERY HIGH CONFIDENCE
+      - pattern: embed_model.get_text_embedding($TEXT)
+      - pattern: $EMBED_MODEL.get_text_embedding($TEXT)
+      - pattern: embed_model.get_query_embedding($QUERY)
+      - pattern: $EMBED_MODEL.get_query_embedding($QUERY)
+
+      # Vector index creation with embeddings - HIGH CONFIDENCE
       - pattern: from llama_index.core import VectorStoreIndex
-      - pattern: index = VectorStoreIndex.from_documents($DOCS)
-      - pattern: $INDEX = VectorStoreIndex.from_documents(...)
-      # Vector store with embeddings
-      - pattern: from llama_index.vector_stores.chroma import ChromaVectorStore
-      - pattern: from llama_index.vector_stores import $VECTORSTORE
-      - pattern: vector_store = ChromaVectorStore(...)
-      - pattern: $STORE = $VECTORSTORE(...)
-      # Storage context with vector store
+      - pattern: VectorStoreIndex.from_documents($DOCS, embed_model=$EMBED_MODEL)
+      - pattern: VectorStoreIndex.from_documents($DOCS, service_context=$CONTEXT)
+
+      # Storage context with vector store and embeddings - HIGH CONFIDENCE
       - pattern: from llama_index.core.storage.storage_context import StorageContext
-      - pattern: storage_context = StorageContext.from_defaults(vector_store=$STORE)
-      - pattern: StorageContext.from_defaults(..., vector_store=...)
-      # Index creation with storage context
-      - pattern: index = VectorStoreIndex.from_documents($DOCS, storage_context=$CONTEXT)
-      - pattern: VectorStoreIndex.from_documents(..., storage_context=...)
-      # Node parser for embeddings
-      - pattern: from llama_index.core.node_parser import SimpleNodeParser
-      - pattern: node_parser = SimpleNodeParser()
-      - pattern: $PARSER = SimpleNodeParser(...)
-      # Query engine (uses embeddings internally)
-      - pattern: query_engine = index.as_query_engine()
-      - pattern: $ENGINE = $INDEX.as_query_engine()
-      - pattern: query_engine.query($QUERY)
-      # Retriever patterns
-      - pattern: from llama_index.core.retrievers import BaseRetriever
-      - pattern: $INDEX.as_retriever(similarity_top_k=$K)
-      - pattern: similarity_top_k=$K
-      # Custom retriever with embeddings
-      - pattern: |
-          class CustomRetriever(BaseRetriever):
-              def __init__(self, vector_index):
-                  self._vector_index = vector_index
-                  ...
+      - pattern: StorageContext.from_defaults(vector_store=$STORE)
+      - pattern: VectorStoreIndex.from_documents($DOCS, storage_context=$CONTEXT)
+
+      # Vector store with embeddings - HIGH CONFIDENCE
+      - pattern: from llama_index.vector_stores.chroma import ChromaVectorStore
+      - pattern: from llama_index.vector_stores.pinecone import PineconeVectorStore
+      - pattern: vector_store = ChromaVectorStore(chroma_collection=$COLLECTION)
+      - pattern: $STORE = PineconeVectorStore(pinecone_index=$INDEX)
     metadata:
       references:
         - https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings/
@@ -63,6 +50,6 @@ rules:
         - embeddings
         - vector-search
         - text-embeddings
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - embeddings

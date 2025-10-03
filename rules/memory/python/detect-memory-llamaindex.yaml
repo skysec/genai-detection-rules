@@ -21,27 +21,33 @@ rules:
               ...
           )
       - pattern: $INDEX.as_chat_engine(..., memory=$MEMORY, ...)
-      - pattern: chat_mode="context"
-      - pattern: memory=$MEMORY_VAR
-      # Chat interactions
-      - pattern: $ENGINE.chat($MESSAGE)
-      - pattern: $CHAT_ENGINE.chat(...)
-      # Memory configuration
-      - pattern: token_limit=$LIMIT
-      - pattern: system_prompt=$PROMPT
-      # Memory buffer patterns
-      - pattern: from_defaults(token_limit=$LIMIT)
-      - pattern: from_defaults(..., token_limit=..., ...)
-      # Chat context patterns
-      - pattern: chat_history=[$MESSAGES]
-      - pattern: "chatHistory: $HISTORY"
-      # Memory reset/clear
-      - pattern: $MEMORY.reset()
-      - pattern: $MEMORY.clear()
-      # Memory state access
-      - pattern: $MEMORY.get_all()
-      - pattern: $MEMORY.get($KEY)
-      - pattern: $MEMORY.put($KEY, $VALUE)
+
+      # LlamaIndex ChatMemoryBuffer method calls - VERY HIGH CONFIDENCE
+      - pattern: |
+          $MEMORY = ChatMemoryBuffer.from_defaults(...)
+          ...
+          $MEMORY.reset()
+      - pattern: |
+          $MEMORY = ChatMemoryBuffer.from_defaults(...)
+          ...
+          $MEMORY.get_all()
+      - pattern: |
+          $MEMORY = ChatMemoryBuffer.from_defaults(...)
+          ...
+          $MEMORY.get($KEY)
+      - pattern: |
+          $MEMORY = ChatMemoryBuffer.from_defaults(...)
+          ...
+          $MEMORY.put($KEY, $VALUE)
+
+      # Memory buffer specific patterns - HIGH CONFIDENCE
+      - pattern: ChatMemoryBuffer.from_defaults(token_limit=$LIMIT)
+      - pattern: |
+          $FUNC(
+              ...,
+              memory=$MEMORY,
+              ...
+          )
     metadata:
       references:
         - https://docs.llamaindex.ai/en/stable/module_guides/deploying/chat_engines/
@@ -53,6 +59,6 @@ rules:
         - memory
         - conversation
         - chat-history
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - memory

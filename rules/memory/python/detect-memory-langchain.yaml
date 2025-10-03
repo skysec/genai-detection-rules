@@ -26,22 +26,30 @@ rules:
               ...
           )
       - pattern: ConversationChain(..., memory=$MEMORY, ...)
-      # Memory usage patterns
-      - pattern: $CHAIN.predict(input=$INPUT)
-      - pattern: $CONVERSATION.predict(...)
-      - pattern: memory=$MEMORY_VAR
-      # Memory method calls
+      # Memory-specific method calls - VERY HIGH CONFIDENCE
       - pattern: $MEMORY.save_context($INPUTS, $OUTPUTS)
       - pattern: "$MEMORY.load_memory_variables({})"
-      - pattern: $MEMORY.clear()
-      # Chat message history
-      - pattern: from langchain.memory.chat_message_histories import $HISTORY
-      - pattern: from langchain.schema import BaseMessage
-      - pattern: chat_memory=$MEMORY
-      # Memory with external storage
+      - pattern: $MEMORY.load_memory_variables($DICT)
+
+      # Chat message history imports - HIGH CONFIDENCE
       - pattern: from langchain.memory.chat_message_histories import RedisChatMessageHistory
       - pattern: from langchain.memory.chat_message_histories import PostgresChatMessageHistory
-      - pattern: message_history=$HISTORY
+      - pattern: from langchain.memory.chat_message_histories import FileChatMessageHistory
+      - pattern: from langchain.memory.chat_message_histories import $HISTORY
+
+      # Memory parameters in function calls - HIGH CONFIDENCE
+      - pattern: |
+          $FUNC(
+              ...,
+              memory=$MEMORY,
+              ...
+          )
+      - pattern: |
+          $FUNC(
+              ...,
+              chat_memory=$MEMORY,
+              ...
+          )
     metadata:
       references:
         - https://python.langchain.com/docs/modules/memory/
@@ -53,6 +61,6 @@ rules:
         - memory
         - conversation
         - chat-history
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - memory

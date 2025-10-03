@@ -35,19 +35,31 @@ rules:
               embedding_function=$EMBEDDINGS,
               ...
           )
-      # Similarity search (implies embeddings)
-      - pattern: vectorstore.similarity_search($QUERY)
-      - pattern: $STORE.similarity_search(..., k=$K)
-      - pattern: vectorstore.similarity_search_with_score($QUERY)
-      # Document processing for embeddings
-      - pattern: from langchain.text_splitter import CharacterTextSplitter
-      - pattern: from langchain.text_splitter import RecursiveCharacterTextSplitter
-      - pattern: text_splitter = CharacterTextSplitter(...)
-      - pattern: texts = text_splitter.split_documents($DOCS)
-      # Embedding-based retrieval
-      - pattern: vectorstore.as_retriever()
-      - pattern: '$STORE.as_retriever(search_kwargs={"k": $K})'
-      - pattern: 'search_kwargs={"k": $K}'
+      # Explicit embedding usage - VERY HIGH CONFIDENCE
+      - pattern: $EMBEDDINGS.embed_documents($DOCS)
+      - pattern: $EMBEDDINGS.embed_query($QUERY)
+      - pattern: $RESULT = $EMBEDDINGS.embed_documents($DOCS)
+      - pattern: $RESULT = $EMBEDDINGS.embed_query($QUERY)
+
+      # Vector store creation with explicit embeddings - HIGH CONFIDENCE
+      - pattern: Chroma.from_documents($DOCS, $EMBEDDINGS)
+      - pattern: FAISS.from_documents($DOCS, $EMBEDDINGS)
+      - pattern: Pinecone.from_documents($DOCS, $EMBEDDINGS)
+      - pattern: $STORE.from_documents($DOCS, embeddings=$EMBEDDINGS)
+
+      # Embedding function parameter - HIGH CONFIDENCE (in function calls only)
+      - pattern: |
+          $FUNC(
+              ...,
+              embedding_function=$EMBEDDINGS,
+              ...
+          )
+      - pattern: |
+          $FUNC(
+              ...,
+              embeddings=$EMBEDDINGS,
+              ...
+          )
     metadata:
       references:
         - https://python.langchain.com/docs/modules/data_connection/text_embedding/
@@ -59,6 +71,6 @@ rules:
         - embeddings
         - vector-search
         - text-embeddings
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - embeddings

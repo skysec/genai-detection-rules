@@ -3,82 +3,83 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Detected Hugging Face embeddings usage: Sentence transformers, text embeddings, or vector generation patterns"
+    message: "Detected HuggingFace embeddings usage: SentenceTransformers or Transformers embedding generation"
     pattern-either:
-      # Sentence Transformers imports
+      # Core SentenceTransformers imports - VERY HIGH CONFIDENCE
       - pattern: from sentence_transformers import SentenceTransformer
+      - pattern: from sentence_transformers import SentenceTransformer, $REST
       - pattern: import sentence_transformers
-      # Model instantiation
-      - pattern: $MODEL = SentenceTransformer($NAME)
+      - pattern: from sentence_transformers import util
+
+      # HuggingFace Transformers embedding imports - HIGH CONFIDENCE
+      - pattern: from transformers import AutoTokenizer, AutoModel
+      - pattern: from transformers import AutoModel
+      - pattern: from transformers import pipeline
+
+      # SentenceTransformer model instantiation - VERY HIGH CONFIDENCE
+      - pattern: SentenceTransformer($MODEL)
+      - pattern: $VAR = SentenceTransformer($MODEL_NAME)
       - pattern: embedding_model = SentenceTransformer(...)
-      - pattern: SentenceTransformer('all-MiniLM-L6-v2')
-      - pattern: SentenceTransformer('all-mpnet-base-v2')
-      - pattern: SentenceTransformer($MODEL_NAME)
-      # Embedding generation
+
+      # Popular embedding models - HIGH CONFIDENCE
+      - pattern: SentenceTransformer("all-MiniLM-L6-v2")
+      - pattern: SentenceTransformer("all-mpnet-base-v2")
+      - pattern: SentenceTransformer("paraphrase-MiniLM-L6-v2")
+      - pattern: SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
+      - pattern: SentenceTransformer("sentence-transformers/$MODEL")
+
+      # AutoModel embedding patterns - HIGH CONFIDENCE
+      - pattern: AutoModel.from_pretrained($MODEL)
+      - pattern: $MODEL = AutoModel.from_pretrained($MODEL_NAME)
+      - pattern: AutoTokenizer.from_pretrained($MODEL)
+
+      # Embedding generation via encode() - VERY HIGH CONFIDENCE
+      - pattern: $MODEL.encode($TEXTS)
       - pattern: $EMBEDDINGS = $MODEL.encode($TEXTS)
-      - pattern: embeddings = embedding_model.encode(...)
-      - pattern: $MODEL.encode([$TEXT])
-      - pattern: $MODEL.encode(documents)
-      # Vector database implementation
-      - pattern: |
-          class SimpleVectorDB:
-              def __init__(self, embedding_model):
-                  self.embedding_model = embedding_model
-                  ...
-      - pattern: |
-          class $CLASS:
-              def __init__(self):
-                  self.embeddings_model = SentenceTransformer($MODEL)
-                  ...
-      # Vector search methods
-      - pattern: |
-          def search(self, query, top_k=$K):
-              query_embedding = self.embedding_model.encode([$QUERY])
-              ...
-      - pattern: |
-          def semantic_search(self, $ARGS) -> list:
-              ...
-      # Similarity computation
-      - pattern: from sklearn.metrics.pairwise import cosine_similarity
-      - pattern: similarities = cosine_similarity($QUERY_EMB, $EMBEDDINGS)
-      - pattern: cosine_similarity($A, $B)
-      # Embedding storage and retrieval
-      - pattern: self.embeddings = $MODEL.encode($DOCS)
-      - pattern: new_embeddings = self.embedding_model.encode($DOCS)
-      - pattern: doc_embeddings = self.embeddings.encode($DOCUMENTS)
-      # Best match finding
-      - pattern: best_match_idx = np.argmax($SIMILARITIES)
-      - pattern: top_indices = np.argsort($SIMILARITIES)[::-1][:$TOP_K]
-      - pattern: np.argsort($SIMILARITIES)[::-1]
-      # Vector database operations
-      - pattern: |
-          def add_documents(self, docs):
-              ...
-              new_embeddings = self.embedding_model.encode(docs)
-              ...
-      - pattern: vector_db.add_documents($DOCS)
-      - pattern: vector_db.search($QUERY)
-      # Memory with embeddings
-      - pattern: self.embeddings_model = SentenceTransformer($MODEL)
-      - pattern: current_embedding = self.embeddings_model.encode([$INPUT])
-      - pattern: historical_embeddings = self.embeddings_model.encode($TEXTS)
-      # Toolkit patterns
-      - pattern: |
-          def get_embeddings(self, texts: list) -> np.ndarray:
-              return self.embeddings.encode(texts)
+      - pattern: embeddings = $MODEL.encode(...)
+      - pattern: $MODEL.encode($TEXTS, convert_to_tensor=$BOOL)
+      - pattern: $MODEL.encode($TEXTS, show_progress_bar=$BOOL)
+
+      # SentenceTransformers utility functions - VERY HIGH CONFIDENCE
+      - pattern: sentence_transformers.util.semantic_search($QUERY_EMB, $CORPUS_EMB)
+      - pattern: util.semantic_search($QUERY_EMB, $CORPUS_EMB)
+      - pattern: sentence_transformers.util.cos_sim($EMB1, $EMB2)
+      - pattern: util.cos_sim($EMB1, $EMB2)
+
+      # Model similarity methods - HIGH CONFIDENCE
+      - pattern: $MODEL.similarity($TEXTS1, $TEXTS2)
+
+      # HuggingFace pipeline for embeddings - HIGH CONFIDENCE
+      - pattern: pipeline("feature-extraction")
+      - pattern: pipeline("feature-extraction", model=$MODEL)
+      - pattern: $PIPE = pipeline("feature-extraction")
+
+      # Model management - HIGH CONFIDENCE
+      - pattern: SentenceTransformer.from_pretrained($MODEL)
+      - pattern: $MODEL.save_pretrained($PATH)
+
+      # Cross-encoder patterns - HIGH CONFIDENCE
+      - pattern: from sentence_transformers import CrossEncoder
+      - pattern: CrossEncoder($MODEL)
+      - pattern: $CROSS_ENCODER.predict($PAIRS)
+
+      # Advanced embedding operations - MEDIUM CONFIDENCE
+      - pattern: from sentence_transformers.evaluation import $EVALUATOR
+      - pattern: $MODEL.evaluate($EVALUATOR)
+
     metadata:
       references:
-        - https://www.sbert.net/docs/quickstart.html
+        - https://www.sbert.net/
         - https://huggingface.co/sentence-transformers
+        - https://huggingface.co/docs/transformers/main_classes/model
       category: maintainability
       technology:
         - genAI
-        - LLMs
         - embeddings
         - sentence-transformers
-        - vector-search
-        - text-embeddings
         - huggingface
-      confidence: MEDIUM
+        - transformers
+        - text-embeddings
+      confidence: HIGH
       subcategory:
         - embeddings

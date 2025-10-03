@@ -5,55 +5,44 @@ rules:
     severity: INFO
     message: "Detected Haystack memory usage: Conversation memory, chat history, or context retention patterns"
     pattern-either:
-      # Custom memory class definitions
+      # Memory component imports - HIGH CONFIDENCE
+      - pattern: from haystack.components.converters import ConversationSummarizer
+      - pattern: from haystack.components.others import Multiplexer
+      - pattern: from haystack.dataclasses import ChatMessage
+
+      # Custom memory class definitions with Haystack patterns - HIGH CONFIDENCE
       - pattern: |
           class ConversationMemory:
               def __init__(self):
                   self.history = []
+
+      # Haystack-specific memory patterns - VERY HIGH CONFIDENCE
+      - pattern: |
+          def add_exchange(self, query: str, response: str):
               ...
       - pattern: |
-          class $CLASS:
-              def __init__(self):
-                  self.messages = []
-                  ...
-      # Memory method patterns
-      - pattern: |
-          def add_exchange(self, $ARGS):
+          def get_context(self, max_turns: int = $N) -> str:
               ...
-      - pattern: |
-          def add_message(self, $ARGS):
-              ...
-      - pattern: |
-          def get_context(self, $ARGS) -> str:
-              ...
-      - pattern: |
-          def get_recent_context(self, $ARGS) -> str:
-              ...
-      # Memory storage patterns
-      - pattern: self.history.append($ITEM)
-      - pattern: self.messages.append($ITEM)
+
+      # ChatMessage usage - HIGH CONFIDENCE
+      - pattern: ChatMessage.from_user($TEXT)
+      - pattern: ChatMessage.from_assistant($TEXT)
+      - pattern: ChatMessage.from_system($TEXT)
+      - pattern: $MESSAGES.append(ChatMessage.from_user($TEXT))
+      - pattern: $MESSAGES.append(ChatMessage.from_assistant($TEXT))
+
+      # Memory storage patterns specific to conversation
       - pattern: self.conversation_history = []
       - pattern: conversation_history = []
-      # Memory usage in chat pipeline
-      - pattern: chat_template = $TEMPLATE
-      - pattern: "{% if tools_output %}"
-      - pattern: "Tool Output: {{ tools_output }}"
-      - pattern: "User: {{ query }}"
-      # Context retrieval patterns
-      - pattern: self.history[-$N:]
+
+      # Context management patterns
       - pattern: recent_history = $LIST[-$N:]
-      - pattern: "max_turns: int = $N"
+      - pattern: self.history[-$N:]
+
       # Memory initialization
       - pattern: memory = ConversationMemory()
-      - pattern: $MEMORY = $CLASS()
-      # Memory state management
-      - pattern: $MEMORY.history
-      - pattern: $MEMORY.messages
-      - pattern: len($MEMORY.history)
-      # Context formatting
-      - pattern: "context += f\"User: {$USER}\\nAssistant: {$ASSISTANT}\\n\""
-      - pattern: "f\"User: {$VAR}\""
-      - pattern: "f\"Assistant: {$VAR}\""
+      - pattern: conversation_memory = $CLASS()
+
     metadata:
       references:
         - https://docs.haystack.deepset.ai/docs/chat-agents
@@ -65,6 +54,6 @@ rules:
         - memory
         - conversation
         - chat-history
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - memory

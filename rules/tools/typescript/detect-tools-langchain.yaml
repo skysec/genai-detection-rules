@@ -6,64 +6,64 @@ rules:
     severity: INFO
     message: "Detected LangChain tools usage: Custom tools, function calling, or tool execution patterns"
     pattern-either:
-      # Tool imports
-      - pattern: import { Tool } from "@langchain/core/tools"
-      - pattern: import { $TOOL } from "@langchain/core/tools"
+      # Core LangChain tools imports - VERY HIGH CONFIDENCE
+      - pattern: import { BaseTool } from "@langchain/core/tools"
       - pattern: import { DynamicTool } from "@langchain/core/tools"
+      - pattern: import { Tool } from "@langchain/core/tools"
       - pattern: import { StructuredTool } from "@langchain/core/tools"
-      # Agent imports
-      - pattern: import { initializeAgentExecutorWithOptions } from "langchain/agents"
+      # Agent imports with tools
       - pattern: import { AgentExecutor } from "langchain/agents"
-      - pattern: import { $AGENT } from "langchain/agents"
-      # Tool class definitions
+      - pattern: import { initializeAgentExecutorWithOptions } from "langchain/agents"
+      - pattern: import { createReactAgent } from "langchain/agents"
+      # Specific tool imports
+      - pattern: import { Calculator } from "@langchain/community/tools/calculator"
+      - pattern: import { WebBrowser } from "langchain/tools/webbrowser"
+      - pattern: import { SerpAPI } from "@langchain/community/tools/serpapi"
+      - pattern: import { $TOOL } from "@langchain/community/tools/$PATH"
+      - pattern: import { $TOOL } from "langchain/tools/$PATH"
+
+      # Tool class definitions - VERY HIGH CONFIDENCE
+      - pattern: |
+          class $CLASS extends BaseTool {
+              ...
+              async _call($INPUT: string): Promise<string> {
+                  ...
+              }
+          }
       - pattern: |
           class $CLASS extends Tool {
               ...
+              async _call($INPUT: string): Promise<string> {
+                  ...
+              }
           }
       - pattern: |
           class $CLASS extends StructuredTool {
               ...
           }
-      # Tool creation patterns
-      - pattern: |
-          const $TOOL = new DynamicTool({
-              name: $NAME,
-              description: $DESC,
-              func: $FUNC,
-              ...
-          })
-      - pattern: |
-          new DynamicTool({
-              ...
-          })
-      # Agent initialization with tools
+
+      # Agent initialization patterns - HIGH CONFIDENCE
       - pattern: |
           const $AGENT = await initializeAgentExecutorWithOptions(
               $TOOLS,
+              $LLM,
               ...
           )
-      - pattern: initializeAgentExecutorWithOptions($TOOLS, ...)
-      # Tool execution patterns
-      - pattern: '$AGENT.call({ input: $INPUT })'
-      - pattern: '$AGENT.invoke({ input: $INPUT })'
-      - pattern: $TOOL.call($INPUT)
-      - pattern: $TOOL.invoke($INPUT)
-      # Tool method implementations
+      - pattern: initializeAgentExecutorWithOptions($TOOLS, $LLM, ...)
+
+      # LangChain specific tool patterns - HIGH CONFIDENCE
       - pattern: |
-          async _call($INPUT: string): Promise<string> {
-              ...
-          }
+          new DynamicTool({
+              name: $NAME,
+              description: $DESC,
+              func: async ($INPUT: string) => {
+                  ...
+              }
+          })
       - pattern: |
-          _call($INPUT: string): Promise<string> {
+          const $TOOL = new DynamicTool({
               ...
-          }
-      # Tool arrays and registration
-      - pattern: const tools = [$TOOLS]
-      - pattern: tools.push($TOOL)
-      - pattern: $AGENT.tools.push($TOOL)
-      # Function calling patterns
-      - pattern: $OBJ.registerFunction($FUNC)
-      - pattern: $VAR.registerFunction(...)
+          })
     metadata:
       references:
         - https://js.langchain.com/docs/modules/agents/tools/
@@ -76,6 +76,6 @@ rules:
         - function-calling
         - typescript
         - javascript
-      confidence: MEDIUM
+      confidence: HIGH
       subcategory:
         - tools
