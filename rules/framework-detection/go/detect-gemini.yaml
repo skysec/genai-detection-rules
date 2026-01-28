@@ -3,15 +3,34 @@ rules:
     languages:
       - go
     severity: INFO
-    message: "Possibly found usage of AI: Gemini"
-    pattern-either:
-      - pattern: import "github.com/google/generative-ai-go"
-      - pattern: genai.NewClient(...)
+    message: "Detected usage of Google Gemini Go SDK - including client initialization or content generation"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import "github.com/google/generative-ai-go/genai"
+          - pattern: import genai "github.com/google/generative-ai-go/genai"
+          # Client creation
+          - pattern: genai.NewClient(...)
+          # Model operations
+          - pattern: $CLIENT.GenerativeModel(...)
+          - pattern: $MODEL.GenerateContent(...)
+          - pattern: $MODEL.GenerateContentStream(...)
+          - pattern: $MODEL.StartChat(...)
     metadata:
       references:
+        - https://github.com/google/generative-ai-go
+        - https://ai.google.dev/api
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - google-gemini
+        - genai
+        - llm
+        - golang
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

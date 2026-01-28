@@ -3,18 +3,41 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Possibly found usage of AI: Anthropic"
-    pattern-either:
-      - pattern: import anthropic
-      - pattern: from anthropic import $ANYTHING
-      - pattern: Anthropic(...)
-      - pattern: anthropic.Anthropic(...)
-      - pattern: $CLIENT.messages.$FUNC(...,model=...,...)
+    message: "Detected usage of Anthropic Claude API - including client initialization, message operations, or streaming"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import anthropic
+          - pattern: from anthropic import $ANYTHING
+          # Client instantiation patterns
+          - pattern: Anthropic(...)
+          - pattern: anthropic.Anthropic(...)
+          - pattern: AsyncAnthropic(...)
+          - pattern: anthropic.AsyncAnthropic(...)
+          - pattern: AnthropicBedrock(...)
+          - pattern: AnthropicVertex(...)
+          # API operations - messages
+          - pattern: $CLIENT.messages.create(...)
+          - pattern: $CLIENT.messages.stream(...)
+          # API operations - completions (legacy)
+          - pattern: $CLIENT.completions.create(...)
+          # Count tokens
+          - pattern: $CLIENT.count_tokens(...)
     metadata:
       references:
+        - https://docs.anthropic.com/en/api/getting-started
+        - https://github.com/anthropics/anthropic-sdk-python
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - anthropic
+        - claude
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

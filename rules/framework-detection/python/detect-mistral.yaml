@@ -3,16 +3,37 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Possibly found usage of AI: Mistral"
-    pattern-either:
-      - pattern: import mistralai
-      - pattern: MistralClient(...)
-      - pattern: $CLIENT.chat(...,model=...,...)
+    message: "Detected usage of Mistral AI API - including client initialization, chat operations, embeddings, or model operations"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import mistralai
+          - pattern: from mistralai import $ANYTHING
+          - pattern: from mistralai.client import $ANYTHING
+          - pattern: from mistralai.async_client import $ANYTHING
+          # Client instantiation patterns
+          - pattern: Mistral(...)
+          - pattern: mistralai.Mistral(...)
+          - pattern: MistralClient(...)
+          - pattern: mistralai.MistralClient(...)
+          - pattern: MistralAsyncClient(...)
+          - pattern: mistralai.MistralAsyncClient(...)
     metadata:
       references:
+        - https://docs.mistral.ai/api/
+        - https://github.com/mistralai/client-python
+        - https://docs.mistral.ai/getting-started/quickstart/
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - mistral
+        - mistralai
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

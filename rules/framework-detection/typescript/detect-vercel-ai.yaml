@@ -3,18 +3,63 @@ rules:
     languages:
       - js
       - ts
+      - typescript
+      - javascript
     severity: INFO
-    message: "Possibly found usage of AI: VercelAI"
-    pattern-either:
-      - pattern: import "ai"
-      - pattern: import "@ai-sdk"
-      - pattern: "generateText({model:...})"
-      - pattern: "generateText({prompt:...})"
+    message: "Detected usage of Vercel AI SDK - including text generation, streaming, embeddings, or AI provider integrations"
+    patterns:
+      - pattern-either:
+          # Import patterns - ai package
+          - pattern: import "ai"
+          - pattern: import $ANYTHING from "ai"
+          - pattern: import { ..., $ANYTHING, ... } from "ai"
+          # Import patterns - @ai-sdk packages
+          - pattern: import "@ai-sdk/openai"
+          - pattern: import $ANYTHING from "@ai-sdk/openai"
+          - pattern: import "@ai-sdk/anthropic"
+          - pattern: import $ANYTHING from "@ai-sdk/anthropic"
+          - pattern: import "@ai-sdk/google"
+          - pattern: import $ANYTHING from "@ai-sdk/google"
+          - pattern: import "@ai-sdk/mistral"
+          - pattern: import $ANYTHING from "@ai-sdk/mistral"
+          # Core functions
+          - pattern: generateText(...)
+          - pattern: streamText(...)
+          - pattern: generateObject(...)
+          - pattern: streamObject(...)
+          # Embeddings
+          - pattern: embed(...)
+          - pattern: embedMany(...)
+          # Tools and agents
+          - pattern: tool(...)
+          - pattern: experimental_generateToolCall(...)
+          # Provider instantiation
+          - pattern: createOpenAI(...)
+          - pattern: createAnthropic(...)
+          - pattern: createGoogle(...)
+          - pattern: createMistral(...)
+          # React hooks
+          - pattern: useChat(...)
+          - pattern: useCompletion(...)
+          - pattern: useObject(...)
+          # Stream utilities
+          - pattern: createStreamableValue(...)
+          - pattern: createStreamableUI(...)
     metadata:
       references:
+        - https://sdk.vercel.ai/docs
+        - https://github.com/vercel/ai
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - vercel-ai
+        - ai-sdk
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

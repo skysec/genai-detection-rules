@@ -3,15 +3,39 @@ rules:
     languages:
       - generic
     severity: INFO
-    message: "Possibly found usage of AI: HTTP Request"
-    pattern-either:
-      - pattern: /chat/completions
-      - pattern: api.openai.com
+    message: "Detected potential AI API usage via HTTP endpoints in configuration or documentation files"
+    patterns:
+      - pattern-either:
+          # Common AI API endpoints
+          - pattern: /v1/chat/completions
+          - pattern: /v1/completions
+          - pattern: /v1/embeddings
+          - pattern: /v1/messages
+          - pattern: /generateContent
+          - pattern: /streamGenerateContent
+          # API URLs
+          - pattern: api.openai.com
+          - pattern: api.anthropic.com
+          - pattern: api.mistral.ai
+          - pattern: generativelanguage.googleapis.com
+          # Bearer token patterns (generic)
+          - pattern: Bearer sk-
+          - pattern: Bearer hf_
+          - pattern: Bearer AIza
     metadata:
       references:
+        - https://platform.openai.com/docs/api-reference
+        - https://docs.anthropic.com/en/api/getting-started
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - genai
+        - llm
+        - api
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: MEDIUM

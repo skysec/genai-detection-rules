@@ -3,23 +3,83 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Possibly found usage of AI tooling: LangChain"
-    pattern-either:
-      - pattern: import langchain_openai
-      - pattern: ChatOpenAI(...)
-      - pattern: import langchain_community
-      - pattern: Ollama(...)
-      - pattern: import langchain_anthropic
-      - pattern: ChatAnthropic(...)
-      - pattern: import langchain_cohere
-      - pattern: ChatCohere(...)
-      - pattern: import langchain_core
-      - pattern: import langchain
+    message: "Detected usage of LangChain framework - including LLM integrations, chains, agents, vector stores, or other LangChain components"
+    patterns:
+      - pattern-either:
+          # Core LangChain imports
+          - pattern: import langchain
+          - pattern: from langchain import $ANYTHING
+          - pattern: import langchain_core
+          - pattern: from langchain_core import $ANYTHING
+          - pattern: import langchain_community
+          - pattern: from langchain_community import $ANYTHING
+          # LLM provider integrations
+          - pattern: import langchain_openai
+          - pattern: from langchain_openai import $ANYTHING
+          - pattern: import langchain_anthropic
+          - pattern: from langchain_anthropic import $ANYTHING
+          - pattern: import langchain_google_genai
+          - pattern: from langchain_google_genai import $ANYTHING
+          - pattern: import langchain_cohere
+          - pattern: from langchain_cohere import $ANYTHING
+          - pattern: import langchain_mistralai
+          - pattern: from langchain_mistralai import $ANYTHING
+          # Chat model classes - OpenAI
+          - pattern: ChatOpenAI(...)
+          - pattern: langchain_openai.ChatOpenAI(...)
+          # Chat model classes - Anthropic
+          - pattern: ChatAnthropic(...)
+          - pattern: langchain_anthropic.ChatAnthropic(...)
+          # Chat model classes - Google
+          - pattern: ChatGoogleGenerativeAI(...)
+          - pattern: langchain_google_genai.ChatGoogleGenerativeAI(...)
+          # Chat model classes - Cohere
+          - pattern: ChatCohere(...)
+          - pattern: langchain_cohere.ChatCohere(...)
+          # Chat model classes - Mistral
+          - pattern: ChatMistralAI(...)
+          - pattern: langchain_mistralai.ChatMistralAI(...)
+          # Community models
+          - pattern: Ollama(...)
+          - pattern: langchain_community.llms.Ollama(...)
+          - pattern: ChatOllama(...)
+          - pattern: langchain_community.chat_models.ChatOllama(...)
+          # Chains
+          - pattern: LLMChain(...)
+          - pattern: ConversationChain(...)
+          - pattern: SimpleSequentialChain(...)
+          - pattern: SequentialChain(...)
+          # Agents - keep more specific ones
+          - pattern: AgentExecutor(...)
+          # Memory - LangChain-specific names
+          - pattern: ConversationBufferMemory(...)
+          - pattern: ConversationBufferWindowMemory(...)
+          - pattern: ConversationSummaryMemory(...)
+          # Document loaders - keep LangChain-specific ones
+          - pattern: PyPDFLoader(...)
+          - pattern: UnstructuredFileLoader(...)
+          # Text splitters - LangChain-specific
+          - pattern: RecursiveCharacterTextSplitter(...)
+          # Runnables (LCEL) - very LangChain-specific
+          - pattern: RunnablePassthrough(...)
+          - pattern: RunnableParallel(...)
+          - pattern: RunnableSequence(...)
     metadata:
       references:
+        - https://python.langchain.com/docs/get_started/introduction
+        - https://github.com/langchain-ai/langchain
+        - https://python.langchain.com/docs/integrations/platforms/
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - langchain
+        - genai
+        - llm
+        - orchestration
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

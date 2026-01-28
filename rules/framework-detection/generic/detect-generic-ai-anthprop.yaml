@@ -3,16 +3,43 @@ rules:
     languages:
       - generic
     severity: INFO
-    message: "Possibly found usage of AI: Anthropic"
-    pattern-either:
-      - pattern: anthropic
-      - pattern: Anthropic
-      - pattern: claude
+    message: "Detected potential Anthropic Claude usage in configuration or documentation files"
+    patterns:
+      - pattern-either:
+          # API endpoints
+          - pattern: api.anthropic.com
+          # Model names
+          - pattern: claude-3
+          - pattern: claude-2
+          - pattern: claude-instant
+          - pattern: claude-sonnet
+          - pattern: claude-opus
+          - pattern: claude-haiku
+          # Package/module references
+          - pattern: |
+              "@anthropic-ai"
+          - pattern: |
+              "anthropic"
+          - pattern: |
+              'anthropic'
+          - pattern: github.com/anthropics
+          # Environment variables
+          - pattern: ANTHROPIC_API_KEY
+          - pattern: CLAUDE_API_KEY
     metadata:
       references:
+        - https://docs.anthropic.com/en/api/getting-started
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - anthropic
+        - claude
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: MEDIUM

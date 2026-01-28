@@ -3,15 +3,40 @@ rules:
     languages:
       - go
     severity: INFO
-    message: "Possibly found usage of AI: OpenAI"
-    pattern-either:
-      - pattern: import "github.com/sashabaranov/go-openai"
-      - pattern: gogpt.NewClient(...)
+    message: "Detected usage of OpenAI Go SDK - including client initialization or API operations"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import "github.com/sashabaranov/go-openai"
+          - pattern: import openai "github.com/sashabaranov/go-openai"
+          # Client creation
+          - pattern: openai.NewClient(...)
+          - pattern: openai.NewClientWithConfig(...)
+          # Chat completion
+          - pattern: $CLIENT.CreateChatCompletion(...)
+          - pattern: $CLIENT.CreateChatCompletionStream(...)
+          # Embeddings
+          - pattern: $CLIENT.CreateEmbeddings(...)
+          # Images
+          - pattern: $CLIENT.CreateImage(...)
+          # Audio
+          - pattern: $CLIENT.CreateTranscription(...)
+          - pattern: $CLIENT.CreateTranslation(...)
     metadata:
       references:
+        - https://github.com/sashabaranov/go-openai
+        - https://platform.openai.com/docs/api-reference
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - openai
+        - genai
+        - llm
+        - golang
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

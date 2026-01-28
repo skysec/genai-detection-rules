@@ -3,15 +3,34 @@ rules:
     languages:
       - kotlin
     severity: INFO
-    message: "Possibly found usage of AI: Gemini"
-    pattern-either:
-      - pattern: import com.google.ai
-      - pattern: GenerativeModel(...)
+    message: "Detected usage of Google Gemini Kotlin SDK - including model initialization or content generation"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import com.google.ai.client.generativeai.GenerativeModel
+          - pattern: import com.google.ai.client.generativeai.*
+          # Model initialization
+          - pattern: GenerativeModel(...)
+          # Content generation
+          - pattern: $MODEL.generateContent(...)
+          - pattern: $MODEL.generateContentStream(...)
+          # Chat
+          - pattern: $MODEL.startChat(...)
     metadata:
       references:
+        - https://github.com/google/generative-ai-android
+        - https://ai.google.dev/tutorials/android_quickstart
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - google-gemini
+        - genai
+        - llm
+        - kotlin
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

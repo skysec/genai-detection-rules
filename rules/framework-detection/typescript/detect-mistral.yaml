@@ -3,18 +3,47 @@ rules:
     languages:
       - js
       - ts
+      - typescript
+      - javascript
     severity: INFO
-    message: "Possibly found usage of AI: Mistral"
-    pattern-either:
-      - pattern: import "@mistralai"
-      - pattern: new MistralClient(...)
-      - pattern: |-
-          $CLIENT.chat({model: ...})
+    message: "Detected usage of Mistral AI API - including client initialization, chat operations, or embeddings"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import "@mistralai/mistralai"
+          - pattern: import $ANYTHING from "@mistralai/mistralai"
+          - pattern: import { ..., $ANYTHING, ... } from "@mistralai/mistralai"
+          - pattern: |
+              const $ANYTHING = require("@mistralai/mistralai")
+          # Client instantiation
+          - pattern: new Mistral(...)
+          - pattern: new MistralClient(...)
+          # Chat operations
+          - pattern: $CLIENT.chat(...)
+          - pattern: $CLIENT.chat.complete(...)
+          - pattern: $CLIENT.chat.stream(...)
+          # Embeddings
+          - pattern: $CLIENT.embeddings(...)
+          - pattern: $CLIENT.embeddings.create(...)
+          # Model operations
+          - pattern: $CLIENT.models.list(...)
+          # Fine-tuning
+          - pattern: $CLIENT.fineTuning.jobs.create(...)
     metadata:
       references:
+        - https://docs.mistral.ai/api/
+        - https://github.com/mistralai/client-ts
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - mistral
+        - mistralai
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

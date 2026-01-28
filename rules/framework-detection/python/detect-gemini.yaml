@@ -3,14 +3,49 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Possibly found usage of AI: Gemini"
-    pattern-either:
-      - pattern: import google.generativeai
+    message: "Detected usage of Google Gemini API - including client initialization, content generation, embeddings, or model operations"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import google.generativeai
+          - pattern: from google.generativeai import $ANYTHING
+          - pattern: import google.ai.generativelanguage
+          - pattern: from google.ai.generativelanguage import $ANYTHING
+          # Configuration and setup
+          - pattern: genai.configure(...)
+          - pattern: google.generativeai.configure(...)
+          # Model instantiation patterns
+          - pattern: genai.GenerativeModel(...)
+          - pattern: google.generativeai.GenerativeModel(...)
+          # Embedding operations
+          - pattern: genai.embed_content(...)
+          - pattern: google.generativeai.embed_content(...)
+          # Model listing and info
+          - pattern: genai.list_models(...)
+          - pattern: google.generativeai.list_models(...)
+          - pattern: genai.get_model(...)
+          - pattern: google.generativeai.get_model(...)
+          # Tuned model operations
+          - pattern: genai.create_tuned_model(...)
+          - pattern: genai.list_tuned_models(...)
+          - pattern: genai.get_tuned_model(...)
+          - pattern: genai.update_tuned_model(...)
+          - pattern: genai.delete_tuned_model(...)
     metadata:
       references:
+        - https://ai.google.dev/api/python/google/generativeai
+        - https://github.com/google/generative-ai-python
+        - https://ai.google.dev/tutorials/python_quickstart
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - google-gemini
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

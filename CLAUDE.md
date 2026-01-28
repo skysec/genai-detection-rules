@@ -98,11 +98,13 @@ make test-go       # Run Go-specific tests
 ## Adding New Rules
 
 When adding new rules:
-1. Place rule files in the appropriate language directory under `rules/framework-detection/`
-2. Follow naming convention: `detect-{framework}.yaml`
-3. Include corresponding test file: `detect-{framework}.{ext}`
-4. Ensure test cases cover both positive and negative scenarios
-5. Add test execution to the Makefile
+1. Review documentation from frameworks and APIs.
+2. Fetch sample code that can be used to create positive and negative tests, and can drive the development of the rules.
+3. Place rule files in the appropriate language directory under `rules/framework-detection/`
+4. Follow naming convention: `detect-{framework}.yaml`
+5. Include corresponding test file: `detect-{framework}.{ext}`
+6. Ensure test cases cover both positive and negative scenarios
+7. Add test execution to the Makefile
 
 ## Rule Metadata
 

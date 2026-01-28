@@ -3,15 +3,90 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Possibly found usage of AI tooling: PyTorch"
-    pattern-either:
-      - pattern: import torch
-      - pattern: torch.$FUNC(...)
+    message: "Detected usage of PyTorch - including tensor operations, neural network modules, model training, or deep learning operations"
+    patterns:
+      - pattern-either:
+          # Core torch imports
+          - pattern: import torch
+          - pattern: from torch import $ANYTHING
+          - pattern: import torch.nn
+          - pattern: from torch.nn import $ANYTHING
+          - pattern: import torch.optim
+          - pattern: from torch.optim import $ANYTHING
+          # Tensor operations
+          - pattern: torch.tensor(...)
+          - pattern: torch.Tensor(...)
+          - pattern: torch.zeros(...)
+          - pattern: torch.ones(...)
+          - pattern: torch.rand(...)
+          - pattern: torch.randn(...)
+          - pattern: torch.empty(...)
+          - pattern: torch.arange(...)
+          - pattern: torch.linspace(...)
+          # Neural network modules
+          - pattern: torch.nn.Module
+          - pattern: torch.nn.Linear(...)
+          - pattern: torch.nn.Conv2d(...)
+          - pattern: torch.nn.LSTM(...)
+          - pattern: torch.nn.GRU(...)
+          - pattern: torch.nn.Transformer(...)
+          - pattern: torch.nn.TransformerEncoder(...)
+          - pattern: torch.nn.TransformerDecoder(...)
+          # Activation functions
+          - pattern: torch.nn.ReLU(...)
+          - pattern: torch.nn.Softmax(...)
+          - pattern: torch.nn.Sigmoid(...)
+          - pattern: torch.nn.Tanh(...)
+          # Loss functions
+          - pattern: torch.nn.CrossEntropyLoss(...)
+          - pattern: torch.nn.MSELoss(...)
+          - pattern: torch.nn.BCELoss(...)
+          - pattern: torch.nn.NLLLoss(...)
+          # Optimizers
+          - pattern: torch.optim.SGD(...)
+          - pattern: torch.optim.Adam(...)
+          - pattern: torch.optim.AdamW(...)
+          - pattern: torch.optim.RMSprop(...)
+          # Model operations
+          - pattern: torch.save(...)
+          - pattern: torch.load(...)
+          # Autograd operations
+          - pattern: torch.autograd.backward(...)
+          - pattern: torch.no_grad(...)
+          - pattern: torch.enable_grad(...)
+          # CUDA operations
+          - pattern: torch.cuda.is_available(...)
+          # DataLoader and datasets
+          - pattern: torch.utils.data.DataLoader(...)
+          - pattern: torch.utils.data.Dataset
+          - pattern: torch.utils.data.TensorDataset(...)
+          # Distributed training
+          - pattern: torch.distributed.init_process_group(...)
+          - pattern: torch.nn.parallel.DistributedDataParallel(...)
+          - pattern: torch.nn.DataParallel(...)
+          # JIT compilation
+          - pattern: torch.jit.script(...)
+          - pattern: torch.jit.trace(...)
+          # Hub operations
+          - pattern: torch.hub.load(...)
+          - pattern: torch.hub.list(...)
     metadata:
       references:
+        - https://pytorch.org/docs/stable/index.html
+        - https://pytorch.org/tutorials/
+        - https://github.com/pytorch/pytorch
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - pytorch
+        - torch
+        - deep-learning
+        - ml
+        - ai
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

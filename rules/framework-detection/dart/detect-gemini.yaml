@@ -3,15 +3,30 @@ rules:
     languages:
       - dart
     severity: INFO
-    message: "Possibly found usage of AI: Gemini"
+    message: "Detected usage of Google Gemini Dart SDK - including model initialization or content generation"
     pattern-either:
+      # Import patterns
+      - pattern: import 'package:google_generative_ai/google_generative_ai.dart';
       - pattern: import 'package:google_generative_ai';
+      # Model initialization
       - pattern: final $MODEL = GenerativeModel(...);
+      - pattern: var $MODEL = GenerativeModel(...);
+      - pattern: GenerativeModel(...)
     metadata:
       references:
+        - https://github.com/google/generative-ai-dart
+        - https://ai.google.dev/tutorials/dart_quickstart
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - google-gemini
+        - genai
+        - llm
+        - dart
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

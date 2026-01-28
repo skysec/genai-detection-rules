@@ -3,15 +3,41 @@ rules:
     languages:
       - swift
     severity: INFO
-    message: "Possibly found usage of AI: Apple CoreML"
-    pattern-either:
-      - pattern: VNCoreMLModel(...)
-      - pattern: MLModelConfiguration(...)
+    message: "Detected usage of Apple Core ML - including model loading, configuration, or inference"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import CoreML
+          - pattern: import Vision
+          # Model configuration
+          - pattern: MLModelConfiguration(...)
+          # Vision Core ML
+          - pattern: VNCoreMLModel(...)
+          - pattern: VNCoreMLModel.model(...)
+          # Core ML model
+          - pattern: MLModel.load(...)
+          - pattern: MLModel.compileModel(...)
+          # Prediction
+          - pattern: $MODEL.prediction(...)
+          - pattern: $MODEL.predictions(...)
+          # Vision requests
+          - pattern: VNCoreMLRequest(...)
+          - pattern: VNImageRequestHandler(...)
     metadata:
       references:
+        - https://developer.apple.com/documentation/coreml
+        - https://developer.apple.com/documentation/vision
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - apple-coreml
+        - ml
+        - ai
+        - swift
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

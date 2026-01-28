@@ -3,18 +3,60 @@ rules:
     languages:
       - js
       - ts
+      - typescript
+      - javascript
     severity: INFO
-    message: "Possibly found usage of AI: OpenAI"
-    pattern-either:
-      - pattern: import "openai"
-      - pattern: import $ANYTHING from "openai";
-      - pattern: new OpenAI(...)
-      - pattern: $CLIENT.chat.completions.$FUNC(...)
+    message: "Detected usage of OpenAI API - including client initialization, chat completions, embeddings, or other OpenAI operations"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import "openai"
+          - pattern: import $ANYTHING from "openai"
+          - pattern: import { ..., $ANYTHING, ... } from "openai"
+          - pattern: |
+              const $ANYTHING = require("openai")
+          # Client instantiation patterns
+          - pattern: new OpenAI(...)
+          - pattern: new $PKG.OpenAI(...)
+          - pattern: new AzureOpenAI(...)
+          # Chat completions
+          - pattern: $CLIENT.chat.completions.create(...)
+          - pattern: $CLIENT.chat.completions.stream(...)
+          # Legacy completions
+          - pattern: $CLIENT.completions.create(...)
+          # Embeddings
+          - pattern: $CLIENT.embeddings.create(...)
+          # Audio operations
+          - pattern: $CLIENT.audio.transcriptions.create(...)
+          - pattern: $CLIENT.audio.translations.create(...)
+          - pattern: $CLIENT.audio.speech.create(...)
+          # Image operations
+          - pattern: $CLIENT.images.generate(...)
+          - pattern: $CLIENT.images.edit(...)
+          - pattern: $CLIENT.images.createVariation(...)
+          # Model operations
+          - pattern: $CLIENT.models.list(...)
+          - pattern: $CLIENT.models.retrieve(...)
+          # Fine-tuning
+          - pattern: $CLIENT.fineTuning.jobs.create(...)
+          - pattern: $CLIENT.fineTuning.jobs.list(...)
+          # Assistants
+          - pattern: $CLIENT.beta.assistants.create(...)
+          - pattern: $CLIENT.beta.threads.create(...)
     metadata:
       references:
+        - https://platform.openai.com/docs/api-reference
+        - https://github.com/openai/openai-node
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - openai
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

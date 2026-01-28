@@ -1,0 +1,22 @@
+# Positive test cases for generic OpenAI detection
+
+# ruleid: detect-generic-ai-oai
+OPENAI_API_KEY=sk-test123
+
+# ruleid: detect-generic-ai-oai
+url: https://api.openai.com/v1/chat/completions
+
+# ruleid: detect-generic-ai-oai
+model: gpt-4
+
+# ruleid: detect-generic-ai-oai
+model: gpt-3.5-turbo
+
+# ruleid: detect-generic-ai-oai
+"openai": "^4.0.0"
+
+# ruleid: detect-generic-ai-oai
+AZURE_OPENAI_KEY=azure-key-test
+
+# ruleid: detect-generic-ai-oai
+embedding_model: text-embedding-ada-002

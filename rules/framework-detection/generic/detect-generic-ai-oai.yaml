@@ -3,15 +3,44 @@ rules:
     languages:
       - generic
     severity: INFO
-    message: "Possibly found usage of AI: OpenAI"
-    pattern-either:
-      - pattern: openai
-      - pattern: OpenAI
+    message: "Detected potential OpenAI usage in configuration or documentation files"
+    patterns:
+      - pattern-either:
+          # API endpoints
+          - pattern: api.openai.com
+          - pattern: openai.azure.com
+          # Model names
+          - pattern: gpt-4
+          - pattern: gpt-3.5-turbo
+          - pattern: text-embedding-ada
+          - pattern: whisper-1
+          - pattern: dall-e
+          # Package/module references
+          - pattern: |
+              "openai"
+          - pattern: |
+              'openai'
+          - pattern: github.com/openai
+          - pattern: github.com/sashabaranov/go-openai
+          # Environment variables
+          - pattern: OPENAI_API_KEY
+          - pattern: OPENAI_ORG_ID
+          # Azure OpenAI
+          - pattern: AZURE_OPENAI_KEY
+          - pattern: AZURE_OPENAI_ENDPOINT
     metadata:
       references:
+        - https://platform.openai.com/docs/api-reference
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - openai
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: MEDIUM
