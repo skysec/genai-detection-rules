@@ -3,16 +3,43 @@ rules:
     languages:
       - js
       - ts
+      - typescript
+      - javascript
     severity: INFO
-    message: "Possibly found usage of AI tooling: promptfoo"
-    pattern-either:
-      - pattern: import "promptfoo"
-      - pattern: promptfoo.evaluate(...)
+    message: "Detected usage of Promptfoo - AI evaluation and testing framework"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import "promptfoo"
+          - pattern: import $ANYTHING from "promptfoo"
+          - pattern: import { ..., $ANYTHING, ... } from "promptfoo"
+          - pattern: |
+              const $ANYTHING = require("promptfoo")
+          # Core evaluation functions
+          - pattern: promptfoo.evaluate(...)
+          - pattern: $PROMPTFOO.evaluate(...)
+          # Assertion functions
+          - pattern: promptfoo.assert(...)
+          - pattern: $PROMPTFOO.assert(...)
+          # Provider functions
+          - pattern: promptfoo.providers.$PROVIDER(...)
+          # Test suite
+          - pattern: promptfoo.testSuite(...)
     metadata:
       references:
+        - https://www.promptfoo.dev/docs/intro
+        - https://github.com/promptfoo/promptfoo
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - promptfoo
+        - genai
+        - llm
+        - testing
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

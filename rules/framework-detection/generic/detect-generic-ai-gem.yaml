@@ -3,15 +3,40 @@ rules:
     languages:
       - generic
     severity: INFO
-    message: "Possibly found usage of AI: Gemini"
-    pattern-either:
-      - pattern: google/generative-ai
-      - pattern: GoogleGenerativeAI
+    message: "Detected potential Google Gemini usage in configuration or documentation files"
+    patterns:
+      - pattern-either:
+          # API endpoints
+          - pattern: generativelanguage.googleapis.com
+          - pattern: ai.google.dev
+          # Model names
+          - pattern: gemini-pro
+          - pattern: gemini-1.5
+          - pattern: gemini-flash
+          - pattern: gemini-ultra
+          # Package/module references
+          - pattern: |
+              "@google/generative-ai"
+          - pattern: |
+              "google.generativeai"
+          - pattern: google.ai.generativelanguage
+          - pattern: github.com/google/generative-ai
+          # Environment variables
+          - pattern: GEMINI_API_KEY
+          - pattern: GOOGLE_AI_KEY
     metadata:
       references:
+        - https://ai.google.dev/api
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - google-gemini
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: MEDIUM

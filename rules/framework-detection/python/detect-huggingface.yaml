@@ -3,14 +3,69 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Possibly found usage of AI: HuggingFace"
-    pattern-either:
-      - pattern: import huggingface_hub
+    message: "Detected usage of Hugging Face libraries - including transformers, datasets, hub operations, or model inference"
+    patterns:
+      - pattern-either:
+          # Core library imports
+          - pattern: import transformers
+          - pattern: from transformers import $ANYTHING
+          - pattern: import huggingface_hub
+          - pattern: from huggingface_hub import $ANYTHING
+          - pattern: import datasets
+          - pattern: from datasets import $ANYTHING
+          # Pipeline usage
+          - pattern: pipeline(...)
+          - pattern: transformers.pipeline(...)
+          # Model classes - auto classes
+          - pattern: AutoModel.from_pretrained(...)
+          - pattern: AutoTokenizer.from_pretrained(...)
+          - pattern: AutoModelForCausalLM.from_pretrained(...)
+          - pattern: AutoModelForSeq2SeqLM.from_pretrained(...)
+          - pattern: AutoModelForSequenceClassification.from_pretrained(...)
+          - pattern: AutoModelForTokenClassification.from_pretrained(...)
+          - pattern: AutoModelForQuestionAnswering.from_pretrained(...)
+          # Specific model classes
+          - pattern: BertModel.from_pretrained(...)
+          - pattern: BertTokenizer.from_pretrained(...)
+          - pattern: GPT2LMHeadModel.from_pretrained(...)
+          - pattern: GPT2Tokenizer.from_pretrained(...)
+          - pattern: T5ForConditionalGeneration.from_pretrained(...)
+          - pattern: T5Tokenizer.from_pretrained(...)
+          - pattern: RobertaModel.from_pretrained(...)
+          - pattern: RobertaTokenizer.from_pretrained(...)
+          # Hub operations
+          - pattern: huggingface_hub.HfApi(...)
+          - pattern: huggingface_hub.login(...)
+          - pattern: huggingface_hub.snapshot_download(...)
+          - pattern: huggingface_hub.hf_hub_download(...)
+          # Inference API
+          - pattern: huggingface_hub.InferenceClient(...)
+          - pattern: huggingface_hub.InferenceApi(...)
+          # Dataset operations
+          - pattern: datasets.load_dataset(...)
+          # Trainer
+          - pattern: transformers.Trainer(...)
+          - pattern: transformers.TrainingArguments(...)
+          # Text generation
+          - pattern: TextGenerationPipeline(...)
     metadata:
       references:
+        - https://huggingface.co/docs/transformers/index
+        - https://huggingface.co/docs/huggingface_hub/index
+        - https://huggingface.co/docs/datasets/index
+        - https://github.com/huggingface/transformers
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - huggingface
+        - transformers
+        - genai
+        - llm
+        - ml
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

@@ -1,0 +1,19 @@
+# Positive test cases for generic Gemini detection
+
+# ruleid: detect-generic-ai-gem
+GEMINI_API_KEY=AIzaSyTest123
+
+# ruleid: detect-generic-ai-gem
+url: https://generativelanguage.googleapis.com/v1/models
+
+# ruleid: detect-generic-ai-gem
+model: gemini-pro
+
+# ruleid: detect-generic-ai-gem
+model: gemini-1.5-flash
+
+# ruleid: detect-generic-ai-gem
+"@google/generative-ai": "^0.1.0"
+
+# ruleid: detect-generic-ai-gem
+docs: https://ai.google.dev/docs

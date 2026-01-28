@@ -3,14 +3,95 @@ rules:
     languages:
       - python
     severity: INFO
-    message: "Possibly found usage of AI tooling: Tensorflow"
-    pattern-either:
-      - pattern: import tensorflow
+    message: "Detected usage of TensorFlow - including tensor operations, keras layers, model training, or deep learning operations"
+    patterns:
+      - pattern-either:
+          # Core tensorflow imports
+          - pattern: import tensorflow
+          - pattern: from tensorflow import $ANYTHING
+          - pattern: import tensorflow.keras
+          - pattern: from tensorflow.keras import $ANYTHING
+          # Tensor operations
+          - pattern: tensorflow.constant(...)
+          - pattern: tensorflow.Variable(...)
+          - pattern: tensorflow.zeros(...)
+          - pattern: tensorflow.ones(...)
+          - pattern: tensorflow.random.normal(...)
+          - pattern: tensorflow.random.uniform(...)
+          # Keras Sequential model
+          - pattern: tensorflow.keras.Sequential(...)
+          - pattern: keras.Sequential(...)
+          # Keras Model class
+          - pattern: tensorflow.keras.Model
+          - pattern: keras.Model
+          # Keras layers
+          - pattern: tensorflow.keras.layers.Dense(...)
+          - pattern: tensorflow.keras.layers.Conv2D(...)
+          - pattern: tensorflow.keras.layers.LSTM(...)
+          - pattern: tensorflow.keras.layers.GRU(...)
+          - pattern: tensorflow.keras.layers.Embedding(...)
+          - pattern: tensorflow.keras.layers.Dropout(...)
+          - pattern: tensorflow.keras.layers.BatchNormalization(...)
+          - pattern: tensorflow.keras.layers.Input(...)
+          - pattern: tensorflow.keras.layers.Flatten(...)
+          # Activation layers
+          - pattern: tensorflow.keras.layers.Activation(...)
+          - pattern: tensorflow.keras.layers.ReLU(...)
+          - pattern: tensorflow.keras.layers.Softmax(...)
+          # Loss functions
+          - pattern: tensorflow.keras.losses.SparseCategoricalCrossentropy(...)
+          - pattern: tensorflow.keras.losses.CategoricalCrossentropy(...)
+          - pattern: tensorflow.keras.losses.MeanSquaredError(...)
+          - pattern: tensorflow.keras.losses.BinaryCrossentropy(...)
+          # Optimizers
+          - pattern: tensorflow.keras.optimizers.Adam(...)
+          - pattern: tensorflow.keras.optimizers.SGD(...)
+          - pattern: tensorflow.keras.optimizers.RMSprop(...)
+          - pattern: tensorflow.keras.optimizers.AdamW(...)
+          # Model saving and loading
+          - pattern: tensorflow.keras.models.load_model(...)
+          - pattern: tensorflow.saved_model.save(...)
+          - pattern: tensorflow.saved_model.load(...)
+          # Callbacks
+          - pattern: tensorflow.keras.callbacks.ModelCheckpoint(...)
+          - pattern: tensorflow.keras.callbacks.EarlyStopping(...)
+          - pattern: tensorflow.keras.callbacks.TensorBoard(...)
+          - pattern: tensorflow.keras.callbacks.LearningRateScheduler(...)
+          # Data preprocessing
+          - pattern: tensorflow.keras.preprocessing.image.ImageDataGenerator(...)
+          - pattern: tensorflow.keras.preprocessing.text.Tokenizer(...)
+          # Dataset operations
+          - pattern: tensorflow.data.Dataset.from_tensor_slices(...)
+          - pattern: tensorflow.data.Dataset.from_generator(...)
+          # GradientTape (eager execution)
+          - pattern: tensorflow.GradientTape(...)
+          # Function decorator
+          - pattern: tensorflow.function
+          # Device placement
+          - pattern: tensorflow.device(...)
+          # Distributed strategy
+          - pattern: tensorflow.distribute.Strategy
+          - pattern: tensorflow.distribute.MirroredStrategy(...)
+          - pattern: tensorflow.distribute.MultiWorkerMirroredStrategy(...)
+          # Hub operations
+          - pattern: tensorflow.keras.applications.$MODEL(...)
     metadata:
       references:
+        - https://www.tensorflow.org/api_docs/python/tf
+        - https://www.tensorflow.org/guide
+        - https://github.com/tensorflow/tensorflow
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - tensorflow
+        - keras
+        - deep-learning
+        - ml
+        - ai
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

@@ -3,16 +3,32 @@ rules:
     languages:
       - csharp
     severity: INFO
-    message: "Possibly found usage of AI: OpenAI"
+    message: "Detected usage of OpenAI C# SDK - including client initialization or API operations"
     pattern-either:
-      - pattern: using OpenAI
-      - pattern: (ChatClient $CLIENT)
-      - pattern: (ChatClient $CLIENT).$FUNC(...)
+      # Using statements
+      - pattern: using OpenAI;
+      - pattern: using OpenAI.Chat;
+      - pattern: using Azure.AI.OpenAI;
+      # Client instantiation
+      - pattern: new OpenAIClient(...)
+      - pattern: new AzureOpenAIClient(...)
+      - pattern: new ChatClient(...)
     metadata:
       references:
+        - https://github.com/openai/openai-dotnet
+        - https://platform.openai.com/docs/api-reference
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - openai
+        - genai
+        - llm
+        - csharp
+        - dotnet
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

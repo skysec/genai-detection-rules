@@ -1,0 +1,6 @@
+# Negative test cases for generic OpenAI detection
+
+# These should not trigger
+api_provider: my-custom-provider
+model_type: transformer
+embedding_service: custom-embeddings

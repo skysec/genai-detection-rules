@@ -3,15 +3,34 @@ rules:
     languages:
       - swift
     severity: INFO
-    message: "Possibly found usage of AI: Gemini"
-    pattern-either:
-      - pattern: import GoogleGenerativeAI
-      - pattern: GenerativeModel(...)
+    message: "Detected usage of Google Gemini Swift SDK - including model initialization or content generation"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import GoogleGenerativeAI
+          # Model initialization
+          - pattern: GenerativeModel(...)
+          - pattern: GoogleGenerativeAI.GenerativeModel(...)
+          # Content generation
+          - pattern: $MODEL.generateContent(...)
+          - pattern: $MODEL.generateContentStream(...)
+          # Chat
+          - pattern: $MODEL.startChat(...)
     metadata:
       references:
+        - https://github.com/google/generative-ai-swift
+        - https://ai.google.dev/tutorials/swift_quickstart
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - google-gemini
+        - genai
+        - llm
+        - swift
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

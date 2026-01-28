@@ -1,0 +1,19 @@
+# Positive test cases for generic AI API detection
+
+# ruleid: detect-generic-ai-api
+POST https://api.openai.com/v1/chat/completions
+
+# ruleid: detect-generic-ai-api
+endpoint: /v1/chat/completions
+
+# ruleid: detect-generic-ai-api
+url: https://api.anthropic.com/v1/messages
+
+# ruleid: detect-generic-ai-api
+Authorization: Bearer sk-test123
+
+# ruleid: detect-generic-ai-api
+endpoint: /v1/embeddings
+
+# ruleid: detect-generic-ai-api
+url: https://generativelanguage.googleapis.com/v1/generateContent

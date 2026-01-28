@@ -3,18 +3,47 @@ rules:
     languages:
       - js
       - ts
+      - typescript
+      - javascript
     severity: INFO
-    message: "Possibly found usage of AI: Gemini"
-    pattern-either:
-      - pattern: import "@google/generative-ai"
-      - pattern: import $ANYTHING from "@google/generative-ai";
-      - pattern: new GoogleGenerativeAI(...)
-      - pattern: $GENAI.getGenerativeModel(...)
+    message: "Detected usage of Google Gemini API - including client initialization, content generation, or embeddings"
+    patterns:
+      - pattern-either:
+          # Import patterns
+          - pattern: import "@google/generative-ai"
+          - pattern: import $ANYTHING from "@google/generative-ai"
+          - pattern: import { ..., $ANYTHING, ... } from "@google/generative-ai"
+          - pattern: |
+              const $ANYTHING = require("@google/generative-ai")
+          # Client instantiation
+          - pattern: new GoogleGenerativeAI(...)
+          # Get model
+          - pattern: $GENAI.getGenerativeModel(...)
+          # Content generation
+          - pattern: $MODEL.generateContent(...)
+          - pattern: $MODEL.generateContentStream(...)
+          # Chat
+          - pattern: $MODEL.startChat(...)
+          - pattern: $CHAT.sendMessage(...)
+          - pattern: $CHAT.sendMessageStream(...)
+          # Embeddings
+          - pattern: $MODEL.embedContent(...)
+          # Token counting
+          - pattern: $MODEL.countTokens(...)
     metadata:
       references:
+        - https://ai.google.dev/api/javascript
+        - https://github.com/google/generative-ai-js
         - https://semgrep.dev/blog/2024/detecting-shadow-ai
-      category: maintainability
+      category: security
+      subcategory:
+        - audit
       technology:
-        - genAI
-        - LLMs
-      confidence: LOW
+        - google-gemini
+        - genai
+        - llm
+      cwe:
+        - "CWE-1390: Weak Authentication"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM

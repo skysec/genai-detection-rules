@@ -1,0 +1,4 @@
+# Negative test cases for generic Gemini detection
+
+api_provider: custom-provider
+model: custom-model

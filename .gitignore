@@ -256,6 +256,6 @@ checkpoints/
 # test directories
 
 #samples/
-.claude/
+.claude/settings*
 samples*
 context*

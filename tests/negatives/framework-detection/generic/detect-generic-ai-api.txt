@@ -1,0 +1,5 @@
+# Negative test cases for generic AI API detection
+
+endpoint: /api/custom
+url: https://api.example.com/data
+Authorization: Bearer custom-token
