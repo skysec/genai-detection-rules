@@ -1,0 +1,94 @@
+rules:
+  - id: detect-tools-mcp
+    languages:
+      - typescript
+      - javascript
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) tool definition: Custom tool implementation with server.setRequestHandler or tool registration"
+    pattern-either:
+      # MCP tool handler registration - VERY HIGH CONFIDENCE
+      - pattern: |
+          $SERVER.setRequestHandler(CallToolRequestSchema, ...)
+      - pattern: |
+          $SERVER.setRequestHandler(CallToolRequestSchema, async (...) => { ... })
+      - pattern: |
+          $MCP.setRequestHandler(CallToolRequestSchema, ...)
+
+      # Tool list handler - indicates tool availability
+      - pattern: |
+          $SERVER.setRequestHandler(ListToolsRequestSchema, ...)
+      - pattern: |
+          $SERVER.setRequestHandler(ListToolsRequestSchema, async () => { ... })
+      - pattern: |
+          $MCP.setRequestHandler(ListToolsRequestSchema, async () => { ... })
+
+      # Tool definition objects
+      - patterns:
+          - pattern: |
+              {
+                ...,
+                name: "$TOOL_NAME",
+                ...,
+                inputSchema: { ... },
+                ...
+              }
+          - metavariable-regex:
+              metavariable: $TOOL_NAME
+              regex: ^[a-zA-Z_][a-zA-Z0-9_-]*$
+
+      # Tool execution patterns
+      - pattern: |
+          switch ($REQUEST.params.name) {
+            case "$TOOL":
+              ...
+            ...
+          }
+
+      # MCP tool imports
+      - pattern: import { CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js"
+      - pattern: import { ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
+      - pattern: import { Tool } from "@modelcontextprotocol/sdk/types.js"
+
+      # Tool schema definitions
+      - pattern: |
+          const $TOOLS: Tool[] = [ ... ]
+      - pattern: |
+          const $TOOL_LIST = [{
+            name: $NAME,
+            description: $DESC,
+            inputSchema: $SCHEMA
+          }]
+
+      # Tool handler functions
+      - pattern: |
+          async function $HANDLER(name: string, args: any) {
+            ...
+          }
+      - pattern: |
+          const $HANDLER = async (toolName: string, arguments: any) => {
+            ...
+          }
+
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/docs/concepts/tools
+        - https://github.com/modelcontextprotocol/typescript-sdk
+        - https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/
+      category: security
+      subcategory:
+        - audit
+      technology:
+        - mcp
+        - model-context-protocol
+        - tools
+        - function-calling
+        - genai
+        - typescript
+        - javascript
+      cwe:
+        - "CWE-749: Exposed Dangerous Method or Function"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM
+      owasp:
+        - A05:2021 - Security Misconfiguration

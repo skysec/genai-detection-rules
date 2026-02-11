@@ -1,0 +1,96 @@
+rules:
+  - id: detect-tools-mcp
+    languages:
+      - go
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) tool definition: Custom tool implementation with tool handlers or tool structs"
+    pattern-either:
+      # MCP tool handler functions - VERY HIGH CONFIDENCE
+      - pattern: |
+          func $HANDLER($SERVER *server.MCPServer, $PARAMS *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+            ...
+          }
+      - pattern: |
+          func ($RECEIVER *$TYPE) HandleToolCall($REQUEST *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+            ...
+          }
+
+      # Tool registration patterns
+      - pattern: |
+          $SERVER.RegisterTool($TOOL_NAME, $HANDLER)
+      - pattern: |
+          $MCP.AddTool($TOOL_DEF)
+      - pattern: |
+          $SERVER.AddToolHandler($NAME, $FUNC)
+
+      # Tool struct definitions - only from protocol package
+      - pattern: |
+          &protocol.Tool{
+            Name:        $NAME,
+            Description: $DESC,
+            InputSchema: $SCHEMA,
+          }
+      - pattern: |
+          &protocol.Tool{
+            ...
+          }
+
+      # Tool list handler functions
+      - pattern: |
+          func $HANDLER($SERVER *server.MCPServer, $PARAMS *protocol.ListToolsRequest) (*protocol.ListToolsResult, error) {
+            ...
+          }
+      - pattern: |
+          func ($RECEIVER *$TYPE) ListTools() ([]*protocol.Tool, error) {
+            ...
+          }
+
+      # Tool imports from MCP SDK
+      - pattern: import "github.com/modelcontextprotocol/go-sdk/server"
+      - pattern: import "github.com/modelcontextprotocol/go-sdk/protocol"
+      - pattern: |
+          import (
+            ...
+            "github.com/modelcontextprotocol/go-sdk/server"
+            ...
+          )
+
+      # Tool execution switch statements
+      - pattern: |
+          switch $REQUEST.Params.Name {
+          case "$TOOL_NAME":
+            ...
+          }
+
+      # Tool schema definitions
+      - pattern: |
+          InputSchema: map[string]interface{}{
+            "type": "object",
+            "properties": map[string]interface{}{
+              ...
+            },
+            ...
+          }
+
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/docs/concepts/tools
+        - https://github.com/modelcontextprotocol/go-sdk
+        - https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/
+      category: security
+      subcategory:
+        - audit
+      technology:
+        - mcp
+        - model-context-protocol
+        - tools
+        - function-calling
+        - genai
+        - golang
+      cwe:
+        - "CWE-749: Exposed Dangerous Method or Function"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM
+      owasp:
+        - A05:2021 - Security Misconfiguration

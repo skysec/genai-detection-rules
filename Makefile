@@ -9,7 +9,7 @@ test: test-all
 test-all: test-python test-typescript test-csharp test-go test-swift test-kotlin test-dart test-generic
 
 # Python tests
-test-python: test-python-framework test-python-tools test-python-memory test-python-embeddings test-python-vector test-python-mcp
+test-python: test-python-framework test-python-models test-python-tools test-python-memory test-python-embeddings test-python-vector test-python-mcp
 
 test-python-framework:
 	@echo "Testing Python Framework detection rules..."
@@ -26,6 +26,23 @@ test-python-framework:
 		done; \
 	else \
 		semgrep --config=rules/framework-detection/python/ --test; \
+	fi
+
+test-python-models:
+	@echo "Testing Python AI Models detection rules..."
+	@if [ -d "tests/positives/models/python" ]; then \
+		for rule in rules/models/python/*.yaml; do \
+			rulename=$$(basename "$$rule" .yaml); \
+			echo "Testing $$rulename..."; \
+			if [ -f "tests/positives/models/python/$$rulename.py" ]; then \
+				semgrep --config="$$rule" "tests/positives/models/python/$$rulename.py" > /dev/null && echo "  ✓ Positive test passed" || echo "  ✗ Positive test failed"; \
+			fi; \
+			if [ -f "tests/negatives/models/python/$$rulename.py" ]; then \
+				! semgrep --config="$$rule" "tests/negatives/models/python/$$rulename.py" --json | jq -e '.results | length > 0' > /dev/null && echo "  ✓ Negative test passed" || echo "  ✗ Negative test failed (false positives detected)"; \
+			fi; \
+		done; \
+	else \
+		semgrep --config=rules/models/python/ --test; \
 	fi
 
 test-python-tools:
@@ -129,7 +146,7 @@ test-python-mcp:
 	fi
 
 # TypeScript tests
-test-typescript: test-typescript-framework test-typescript-tools test-typescript-memory test-typescript-embeddings
+test-typescript: test-typescript-framework test-typescript-models test-typescript-tools test-typescript-memory test-typescript-embeddings
 
 test-typescript-framework:
 	@echo "Testing TypeScript Framework detection rules..."
@@ -146,6 +163,23 @@ test-typescript-framework:
 		done; \
 	else \
 		semgrep --config=rules/framework-detection/typescript/ --test; \
+	fi
+
+test-typescript-models:
+	@echo "Testing TypeScript AI Models detection rules..."
+	@if [ -d "tests/positives/models/typescript" ]; then \
+		for rule in rules/models/typescript/*.yaml; do \
+			rulename=$$(basename "$$rule" .yaml); \
+			echo "Testing $$rulename..."; \
+			if [ -f "tests/positives/models/typescript/$$rulename.ts" ]; then \
+				semgrep --config="$$rule" "tests/positives/models/typescript/$$rulename.ts" > /dev/null && echo "  ✓ Positive test passed" || echo "  ✗ Positive test failed"; \
+			fi; \
+			if [ -f "tests/negatives/models/typescript/$$rulename.ts" ]; then \
+				! semgrep --config="$$rule" "tests/negatives/models/typescript/$$rulename.ts" --json | jq -e '.results | length > 0' > /dev/null && echo "  ✓ Negative test passed" || echo "  ✗ Negative test failed (false positives detected)"; \
+			fi; \
+		done; \
+	else \
+		semgrep --config=rules/models/typescript/ --test; \
 	fi
 
 test-typescript-tools:
@@ -237,6 +271,10 @@ test-csharp-tools:
 	fi
 
 # Capability-specific tests
+test-models:
+	@echo "Testing all AI Models detection rules..."
+	@make test-python-models test-typescript-models test-go-models
+
 test-tools:
 	@echo "Testing all Tools detection rules..."
 	@make test-python-tools test-typescript-tools test-csharp-tools
@@ -302,7 +340,7 @@ test-mcp-client:
 	fi
 
 # Go tests
-test-go: test-go-framework
+test-go: test-go-framework test-go-models
 
 test-go-framework:
 	@echo "Testing Go Framework detection rules..."
@@ -319,6 +357,23 @@ test-go-framework:
 		done; \
 	else \
 		semgrep --config=rules/framework-detection/go/ --test; \
+	fi
+
+test-go-models:
+	@echo "Testing Go AI Models detection rules..."
+	@if [ -d "tests/positives/models/go" ]; then \
+		for rule in rules/models/go/*.yaml; do \
+			rulename=$$(basename "$$rule" .yaml); \
+			echo "Testing $$rulename..."; \
+			if [ -f "tests/positives/models/go/$$rulename.go" ]; then \
+				semgrep --config="$$rule" "tests/positives/models/go/$$rulename.go" > /dev/null && echo "  ✓ Positive test passed" || echo "  ✗ Positive test failed"; \
+			fi; \
+			if [ -f "tests/negatives/models/go/$$rulename.go" ]; then \
+				! semgrep --config="$$rule" "tests/negatives/models/go/$$rulename.go" --json | jq -e '.results | length > 0' > /dev/null && echo "  ✓ Negative test passed" || echo "  ✗ Negative test failed (false positives detected)"; \
+			fi; \
+		done; \
+	else \
+		semgrep --config=rules/models/go/ --test; \
 	fi
 
 # Swift tests
@@ -451,6 +506,7 @@ help:
 	@echo "  test-dart               - Run all Dart rule tests"
 	@echo "  test-generic            - Run all Generic rule tests"
 	@echo "  test-framework-detection- Test all framework detection rules"
+	@echo "  test-models             - Test all AI models detection rules"
 	@echo "  test-tools              - Test all Tools detection rules"
 	@echo "  test-memory             - Test all Memory detection rules"
 	@echo "  test-embeddings         - Test all Embeddings detection rules"
