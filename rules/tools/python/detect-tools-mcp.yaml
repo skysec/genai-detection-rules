@@ -1,0 +1,103 @@
+rules:
+  - id: detect-tools-mcp
+    languages:
+      - python
+    severity: INFO
+    message: "Detected MCP (Model Context Protocol) tool definition: Custom tool implementation with @tool decorator or tool registration"
+    pattern-either:
+      # MCP tool decorator patterns - VERY HIGH CONFIDENCE
+      - pattern: |
+          @$SERVER.tool
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$SERVER.tool
+          async def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.tool
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.tool
+          async def $FUNC(...):
+            ...
+
+      # MCP tool decorator with parameters (name, description, etc.)
+      - pattern: |
+          @$SERVER.tool(...)
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$SERVER.tool(...)
+          async def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.tool(...)
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$MCP.tool(...)
+          async def $FUNC(...):
+            ...
+
+      # FastMCP tool decorator patterns
+      - pattern: |
+          @$FASTMCP.tool
+          def $FUNC(...):
+            ...
+      - pattern: |
+          @$FASTMCP.tool(...)
+          async def $FUNC(...):
+            ...
+
+      # Tool definition with schema/parameters
+      - patterns:
+          - pattern-inside: |
+              @$SERVER.tool
+              def $FUNC(...):
+                ...
+          - pattern: |
+              """$DOCSTRING"""
+
+      # Tool with Context parameter (MCP specific pattern)
+      - patterns:
+          - pattern-either:
+              - pattern: |
+                  @$SERVER.tool
+                  def $FUNC(..., context: Context, ...):
+                    ...
+              - pattern: |
+                  @$MCP.tool
+                  async def $FUNC(..., context: Context, ...):
+                    ...
+              - pattern: |
+                  @$FASTMCP.tool(...)
+                  def $FUNC(..., ctx: Context, ...):
+                    ...
+
+      # MCP tool imports - indication of tool development
+      - pattern: from mcp.server.fastmcp import tool
+      - pattern: from mcp import tool
+
+    metadata:
+      references:
+        - https://modelcontextprotocol.io/docs/concepts/tools
+        - https://github.com/modelcontextprotocol/python-sdk
+        - https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/
+      category: security
+      subcategory:
+        - audit
+      technology:
+        - mcp
+        - model-context-protocol
+        - tools
+        - function-calling
+        - genai
+      cwe:
+        - "CWE-749: Exposed Dangerous Method or Function"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM
+      owasp:
+        - A05:2021 - Security Misconfiguration

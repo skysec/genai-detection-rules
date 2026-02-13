@@ -1,0 +1,77 @@
+rules:
+  - id: detect-ai-models
+    languages:
+      - python
+    severity: INFO
+    message: "Detected AI model usage: ${MODEL_NAME} - Framework-agnostic model detection"
+    patterns:
+      - pattern-either:
+          # OpenAI GPT models - matches gpt-*, o1-*, o3-* etc.
+          - pattern: model="gpt-$VERSION"
+          - pattern: model="o1-$VERSION"
+          - pattern: model="o3-$VERSION"
+          # OpenAI specialized models
+          - pattern: model="dall-e-$VERSION"
+          - pattern: model="whisper-$VERSION"
+          - pattern: model="tts-$VERSION"
+          - pattern: model="text-embedding-$VERSION"
+
+          # Anthropic Claude models - matches claude-*, claude-3-*, claude-3.5-*, etc.
+          - pattern: model="claude-$VERSION"
+          - pattern: model="claude-instant-$VERSION"
+
+          # Google Gemini models - matches gemini-*, gemini-1.5-*, etc.
+          - pattern: model="gemini-$VERSION"
+
+          # Mistral models - matches mistral-*, mixtral-*
+          - pattern: model="mistral-$VERSION"
+          - pattern: model="mixtral-$VERSION"
+
+          # Meta Llama models - matches llama-*, llama-2-*, llama-3-*, llama-3.1-*
+          - pattern: model="llama-$VERSION"
+
+          # Cohere models - matches command-*, command-r-*
+          - pattern: model="command-$VERSION"
+
+          # Additional patterns for dictionary-style usage
+          - patterns:
+              - pattern: |
+                  {..., "model": "$MODEL_NAME", ...}
+              - metavariable-regex:
+                  metavariable: $MODEL_NAME
+                  regex: ^(gpt-|o1-|o3-|dall-e-|whisper-|tts-|text-embedding-|claude-|gemini-|mistral-|mixtral-|llama-|command-).*
+
+          # Pattern for model parameter in function calls
+          - patterns:
+              - pattern: |
+                  $FUNC(..., model=$MODEL_VAR, ...)
+              - metavariable-regex:
+                  metavariable: $MODEL_VAR
+                  regex: ^"(gpt-|o1-|o3-|dall-e-|whisper-|tts-|text-embedding-|claude-|gemini-|mistral-|mixtral-|llama-|command-).*"$
+
+    metadata:
+      references:
+        - https://platform.openai.com/docs/models
+        - https://docs.anthropic.com/en/docs/models-overview
+        - https://ai.google.dev/models/gemini
+        - https://docs.mistral.ai/getting-started/models/
+        - https://www.llama.com/docs/model-cards-and-prompt-formats/
+      category: security
+      subcategory:
+        - audit
+      technology:
+        - ai-models
+        - openai
+        - anthropic
+        - gemini
+        - mistral
+        - llama
+        - cohere
+        - genai
+      cwe:
+        - "CWE-1357: Insufficient UI Warning of Dangerous Operations"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM
+      owasp:
+        - A01:2021 - Broken Access Control

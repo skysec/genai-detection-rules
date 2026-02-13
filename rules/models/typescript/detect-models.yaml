@@ -1,0 +1,108 @@
+rules:
+  - id: detect-ai-models
+    languages:
+      - typescript
+      - javascript
+    severity: INFO
+    message: "Detected AI model usage: ${MODEL_NAME} - Framework-agnostic model detection"
+    patterns:
+      - pattern-either:
+          # OpenAI GPT models - matches gpt-*, o1-*, o3-* etc.
+          - pattern: model:"gpt-$VERSION"
+          - pattern: model:"o1-$VERSION"
+          - pattern: model:"o3-$VERSION"
+          - pattern: model='gpt-$VERSION'
+          - pattern: model='o1-$VERSION'
+          - pattern: model='o3-$VERSION'
+          # OpenAI specialized models
+          - pattern: model:"dall-e-$VERSION"
+          - pattern: model:"whisper-$VERSION"
+          - pattern: model:"tts-$VERSION"
+          - pattern: model:"text-embedding-$VERSION"
+          - pattern: model='dall-e-$VERSION'
+          - pattern: model='whisper-$VERSION'
+          - pattern: model='tts-$VERSION'
+          - pattern: model='text-embedding-$VERSION'
+
+          # Anthropic Claude models
+          - pattern: model:"claude-$VERSION"
+          - pattern: model:"claude-instant-$VERSION"
+          - pattern: model='claude-$VERSION'
+          - pattern: model='claude-instant-$VERSION'
+
+          # Google Gemini models
+          - pattern: model:"gemini-$VERSION"
+          - pattern: model='gemini-$VERSION'
+
+          # Mistral models
+          - pattern: model:"mistral-$VERSION"
+          - pattern: model:"mixtral-$VERSION"
+          - pattern: model='mistral-$VERSION'
+          - pattern: model='mixtral-$VERSION'
+
+          # Meta Llama models
+          - pattern: model:"llama-$VERSION"
+          - pattern: model='llama-$VERSION'
+
+          # Cohere models
+          - pattern: model:"command-$VERSION"
+          - pattern: model='command-$VERSION'
+
+          # Pattern for model property with regex validation
+          - patterns:
+              - pattern: |
+                  { ..., model: "$MODEL_NAME", ... }
+              - metavariable-regex:
+                  metavariable: $MODEL_NAME
+                  regex: ^(gpt-|o1-|o3-|dall-e-|whisper-|tts-|text-embedding-|claude-|gemini-|mistral-|mixtral-|llama-|command-).*
+
+          # Pattern for model assignment
+          - patterns:
+              - pattern: |
+                  const $VAR = "$MODEL_NAME"
+              - metavariable-regex:
+                  metavariable: $MODEL_NAME
+                  regex: ^(gpt-|o1-|o3-|dall-e-|whisper-|tts-|text-embedding-|claude-|gemini-|mistral-|mixtral-|llama-|command-).*
+              - metavariable-regex:
+                  metavariable: $VAR
+                  regex: (?i).*(model|ai|llm).*
+
+          # Pattern for let assignment
+          - patterns:
+              - pattern: |
+                  let $VAR = "$MODEL_NAME"
+              - metavariable-regex:
+                  metavariable: $MODEL_NAME
+                  regex: ^(gpt-|o1-|o3-|dall-e-|whisper-|tts-|text-embedding-|claude-|gemini-|mistral-|mixtral-|llama-|command-).*
+              - metavariable-regex:
+                  metavariable: $VAR
+                  regex: (?i).*(model|ai|llm).*
+
+    metadata:
+      references:
+        - https://platform.openai.com/docs/models
+        - https://docs.anthropic.com/en/docs/models-overview
+        - https://ai.google.dev/models/gemini
+        - https://docs.mistral.ai/getting-started/models/
+        - https://www.llama.com/docs/model-cards-and-prompt-formats/
+      category: security
+      subcategory:
+        - audit
+      technology:
+        - ai-models
+        - openai
+        - anthropic
+        - gemini
+        - mistral
+        - llama
+        - cohere
+        - genai
+        - typescript
+        - javascript
+      cwe:
+        - "CWE-1357: Insufficient UI Warning of Dangerous Operations"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: MEDIUM
+      owasp:
+        - A01:2021 - Broken Access Control

@@ -250,7 +250,7 @@ coverage/
 *.model
 *.bin
 *.safetensors
-models/
+#models/
 checkpoints/
 
 # test directories
